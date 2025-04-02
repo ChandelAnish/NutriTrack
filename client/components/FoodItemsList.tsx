@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { FoodItem } from '../Types';
+import { FoodItem } from '@/types';
 
 interface FoodItemsListProps {
   foods: FoodItem[];

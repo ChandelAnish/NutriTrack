@@ -1,5 +1,3 @@
-import MovieCard from "@/components/MovieCard";
-import SearchBar from "@/components/SearchBar";
 import { getTrendingMovies } from "@/services/appWrite";
 import useFetch, { Movies } from "@/services/useFetch";
 import { Link, useRouter } from "expo-router";

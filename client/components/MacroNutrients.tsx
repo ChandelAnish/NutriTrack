@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { MealData } from '../Types';
+import { MealData } from '@/types';
 
 interface MacroNutrientsProps {
   meal: MealData;

@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { MealData } from '../Types';
-import { mealIcons } from '../Constants';
+import { MealData } from '@/types';
+import { mealIcons } from '@/constants/Constants';
 import FoodItemsList from './FoodItemsList';
 import MacroNutrients from './MacroNutrients';
 

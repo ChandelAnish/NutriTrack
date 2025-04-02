@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { DailyMealPlan } from './Types';
-import { getMealPlanData } from './API';
-import MealCard from './Components/MealCard';
-import ProgressBar from './Components/ProgressBar';
-import LoadingSpinner from './Components/LoadingSpinner';
+import { DailyMealPlan } from '@/types';
+import { getMealPlanData } from '@/api/api';
+import MealCard from '@/components/MealCard';
+import ProgressBar from '@/components/ProgressBar';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const MealPlanScreen = () => {
   const [mealPlanData, setMealPlanData] = useState<DailyMealPlan | null>(null);
