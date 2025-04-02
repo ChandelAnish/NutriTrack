@@ -6,6 +6,9 @@ import { mealIcons } from '@/constants/Constants';
 import FoodItemsList from './FoodItemsList';
 import MacroNutrients from './MacroNutrients';
 
+// Type for valid Feather icon names
+type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
+
 interface MealCardProps {
   mealKey: string;
   meal: MealData;
@@ -19,7 +22,8 @@ const MealCard: React.FC<MealCardProps> = ({
   isCompleted, 
   onToggleCompletion 
 }) => {
-  const icon = mealIcons[mealKey] || 'disc';
+  // Cast the icon to a valid Feather icon name
+  const icon = mealIcons[mealKey] as FeatherIconName || 'disc' as FeatherIconName;
   
   // Format meal key for display
   const formatMealKey = (key: string) => {
