@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { DailyMealPlan } from './Types';
+import { DailyMealPlan } from '@/types';
 
 export const getMealPlanData = async(): Promise<DailyMealPlan | null> => {
   try {
-    const { data } = await axios.post(`http://127.0.0.1:8000/DailyMealPlan`, {
+    const { data } = await axios.post(`http://192.168.29.11:8000/DailyMealPlan`, {
       age: 20,
       weight: 50,
       targetWeight: 70,
