@@ -16,7 +16,7 @@ class responseUserSchema(BaseModel):
 class Meal(BaseModel):
     name: str = Field(description="Name of the meal")
     foods: List[Dict[str, str]] = Field(
-        description="List of foods in this meal with name and portion size"
+        description="List of foods in this meal with name, portion size, and emoji"
     )
     calories: int = Field(description="Total calories for this meal")
     protein: int = Field(description="Protein content in grams")
