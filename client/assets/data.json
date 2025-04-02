@@ -1,0 +1,76 @@
+{
+  "movies": [
+    {
+      "id": 1,
+      "name": "bahubali",
+      "theme": "classic",
+      "image": "https://m.media-amazon.com/images/M/MV5BM2YxZThhZmEtYzM0Yi00OWYxLWI4NGYtM2Y2ZDNmOGE0ZWQzXkEyXkFqcGc@._V1_.jpg"
+    },
+    {
+      "id": 2,
+      "name": "john wick",
+      "theme": "action",
+      "image": "https://upload.wikimedia.org/wikipedia/en/thumb/9/98/John_Wick_TeaserPoster.jpg/250px-John_Wick_TeaserPoster.jpg"
+    },
+    {
+      "id": 3,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 4,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 5,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 6,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 7,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 8,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 9,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 10,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 11,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    },
+    {
+      "id": 12,
+      "name": "avengers",
+      "theme": "superhero",
+      "image": "https://images-cdn.ubuy.com.sg/6586c87c09e6cd42554da78c-the-avengers-movie-poster-captain.jpg"
+    }
+  ]
+}

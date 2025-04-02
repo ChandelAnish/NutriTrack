@@ -1,0 +1,307 @@
+refer NativeWind website
+    npm install nativewind tailwindcss react-native-reanimated react-native-safe-area-context
+
+nativewind-env.d.ts file :
+    /// <reference types="nativewind/types" />
+    --> this enables typescript to recognize tailwindcss class preventing constant error messages.
+
+
+
+in case of dynamic route :
+
+    Instead of: <Link href={"/movies/inception"} >inception movie</Link> ❌
+    Use: <Link href={{ pathname: "/movies/[id]", params: { id: "inception" } }}>inception movie</Link> ✔️
+
+    - You have a dynamic route "/movies/[id]", which means expo-router expects an object-based href when navigating with a dynamic parameter.
+    - Providing a string directly ("/movies/inception") does not explicitly indicate the dynamic parameter expected in the route.
+    - pathname: "/movies/[id]" → This tells expo-router that the route has a dynamic segment.
+    - params: { id: "inception" } → This provides the actual value ("inception") for the [id] parameter.
+
+
+
+** Expo Router app, there can only be one index.tsx per directory, but you can have multiple index.tsx files in different directories.
+    - index.tsx at the root (/app/index.tsx) → This serves as the default home screen of the app.
+    - Nested index.tsx in subdirectories → Each folder can have its own index.tsx to serve as the default route for that folder.
+
+
+Basic Routing
+
+- Each .tsx file inside the /app directory automatically becomes a route.
+        /app
+          ├── index.tsx          # Maps to "/"
+          ├── about.tsx          # Maps to "/about"
+          ├── contact.tsx        # Maps to "/contact"
+
+- Folders create nested routes.
+        /app
+          ├── index.tsx         # "/"
+          ├── profile/
+          │   ├── index.tsx     # "/profile"
+          │   ├── settings.tsx  # "/profile/settings"
+
+- Use square brackets ([param].tsx) to create dynamic routes.
+        - Inside movies/[id].tsx, you can get the id parameter using the useLocalSearchParams hook.
+        - const { id } = useLocalSearchParams();
+
+-  Catch-All Routes ([...param].tsx) : If you want to match multiple segments, use [...param].tsx.
+        - here also you can get the params using useLocalSearchParams hook.
+
+- Layouts (_layout.tsx)
+        - A _layout.tsx file inside a folder wraps all routes in that folder, similar to React components.
+
+- Linking Between Pages
+        - Use <Link /> from expo-router to navigate.
+
+- API-Like Routes (api/)
+    - You can create API routes inside the api/ folder.
+            /app
+              ├── api/
+              │   ├── hello.ts       # "/api/hello"
+            
+            export function GET() {
+              return Response.json({ message: "Hello, world!" });
+            }
+    
+    - Expo Router allows you to define API-like endpoints inside the app/api/ directory. This is similar to Next.js API routes but runs only on the client side.
+            1️⃣ No Server-Side Execution
+                    - Expo Router’s API routes run in the client’s JavaScript runtime, meaning:
+                    - They execute inside the app (not on a backend server).
+                    - They are not a replacement for a real backend like Express.js or Firebase Functions.
+
+            2️⃣ No Database or Backend Logic
+                    - You cannot directly connect to MySQL, PostgreSQL, or MongoDB from these API routes.
+                    - You still need a backend (e.g., Firebase, Supabase, or a custom server) to store and process data.
+
+            3️⃣ Not Secure for Sensitive Operations
+                    - Since Expo’s API routes run in the frontend, sensitive operations like authentication, payments, or database queries should not be done here.
+                    - API keys and database credentials would be exposed in the client.
+
+     When to Use Expo API-Like Routes?
+            1️⃣ Local API Endpoints (Client-Side Processing)
+                    Example: Processing local JSON data instead of fetching from a backend.
+            2️⃣ Proxying Requests (Middleware-Like Behavior)
+                    You can use API routes to modify requests before sending them to a real backend.
+            3️⃣ Generating Dynamic Content Locally
+                    You can generate dynamic content on the client side based on user actions.
+            4️⃣ Handling Small App-Specific Logic
+                    If your app needs lightweight logic without making a network request, API routes can help.
+        
+        ✅ Good For:
+        ✔️ Local API endpoints (static data)
+        ✔️ Proxying requests (middleware-like behavior)
+        ✔️ Generating dynamic content (QR codes, temporary files)
+        ✔️ Handling small app-specific logic (OTP, local computations)
+
+        ❌ Not for:
+        🚫 Storing sensitive data (e.g., API keys, user passwords)
+        🚫 Connecting to databases (e.g., MySQL, MongoDB)
+        🚫 Running long-running server-side processes
+
+
+**React Native components :
+    📌 Core UI Components
+        1️⃣ <View> → Like <div> in HTML, used for layout.
+        2️⃣ <Text> → For displaying text.
+        3️⃣ <Image> → For displaying images.
+        4️⃣ <ScrollView> → A scrollable container.
+        5️⃣ <FlatList> → Optimized list rendering.
+        6️⃣ <SectionList> → List with sections (grouped data).
+
+    📌 Interactive Components
+        7️⃣ <Button> → Simple button.
+        8️⃣ <Pressable> → More flexible than <Button>, detects touch gestures.
+        9️⃣ <TouchableOpacity> → Button with opacity effect.
+        🔟 <TouchableHighlight> → Button with highlight effect.
+
+    📌 Input & Forms
+        1️⃣1️⃣ <TextInput> → For user input.
+        1️⃣2️⃣ <Switch> → Toggle switch.
+        1️⃣3️⃣ <Picker> → Dropdown picker.
+        1️⃣4️⃣ <Slider> → For selecting a value in a range.
+
+    📌 Media & Animation
+        1️⃣5️⃣ <Modal> → Pop-up dialog.
+        1️⃣6️⃣ <ActivityIndicator> → Loading spinner.
+        1️⃣7️⃣ <ProgressBarAndroid> (Android only) → Progress indicator.
+        1️⃣8️⃣ <StatusBar> → Controls the status bar.
+
+    📌 Gestures & Navigation
+        1️⃣9️⃣ <KeyboardAvoidingView> → Adjusts layout when keyboard is open.
+        2️⃣0️⃣ <SafeAreaView> → Avoids overlapping with the status bar.
+
+    📌 Advanced Components
+        2️⃣1️⃣ <Animated.View> → For animations.
+        2️⃣2️⃣ <GestureHandler> → Handles swipe, tap, and other gestures.
+        2️⃣3️⃣ <WebView> → To render web content inside the app.
+
+
+What is Stack and Stack.Screen in Expo Router?
+
+    1️⃣ Stack (Stack Navigator)
+        - Stack is a navigation container in Expo Router (based on react-navigation).
+        - It manages screen transitions where screens are stacked on top of each other.
+        - Example: When navigating from Home → Movie Details, the Home screen stays in the background, and the Movie Details screen appears on top.
+            
+            import { Stack } from "expo-router";
+
+            export default function Layout() {
+            return <Stack />;
+            }
+
+            Here :
+                - The <Stack /> component sets up a stack navigator for managing screen transitions.
+                - It automatically detects files inside the app/ directory and registers them as screens.
+                - It ensures that when you navigate between screens, they are stacked on top of each other, similar to how pages work in a browser.
+
+            What Happens When You Navigate?
+                1️⃣ Start on index.tsx (Home).
+                2️⃣ Navigate to /movies/inception.
+                3️⃣ The Movie Details screen is stacked on top of the Home screen.
+                4️⃣ Pressing back will return to the previous screen.
+
+
+    2️⃣ Stack.Screen (Defining Screens in the Stack)
+            - Stack.Screen defines each screen in the stack.
+            - The name prop links to the file-based route (e.g., name="movies/[id]" matches app/movies/[id].tsx).
+            - The options prop allows customizing the screen (e.g., hiding the header).
+
+                <Stack.Screen 
+                name="movies/[id]" 
+                options={{ headerShown: false }} 
+                />
+
+
+What are Tabs and Tabs.Screen in Expo Router?
+    - In Expo Router, Tabs is used for bottom tab navigation, allowing users to switch between different screens easily.
+
+    1️⃣ Tabs (Tab Navigator)
+            - Tabs creates a bottom tab navigation system.
+            - It automatically detects files inside the same folder and makes them navigable via tabs.
+            🔹 Example: If the folder structure is:
+
+                    app/
+                    ├── _layout.tsx      // Contains <Tabs /> (Defines Tab Navigation)
+                    ├── index.tsx        // Home Screen (Default Tab)
+                    ├── profile.tsx      // Profile Screen
+                    ├── settings.tsx     // Settings Screen
+                    Then each file (index.tsx, profile.tsx, settings.tsx) becomes a separate tab.
+
+
+    2️⃣ Tabs.Screen (Defining Tabs)
+            - Tabs.Screen registers individual screens inside the tab navigator.
+            - The name prop matches a file inside the folder (e.g., name="index" → index.tsx).
+            - The options prop allows customization like:
+                - title: Sets the tab title.
+                - headerShown: false: Hides the header.
+
+
+What is tabBarIcon?
+    tabBarIcon is a property used in Tabs.Screen inside expo-router to customize the icon shown in the bottom tab bar for a specific screen.
+            - It accepts a function that returns a ReactNode (JSX), typically an icon component.
+            - The function receives an object with properties like focused, color, and size. 'focused' is a boolean (true or false) that indicates whether the current tab is active (selected).
+            - It determines the icon appearance based on the screen's active state.
+
+
+** 'flex-1' makes an element expand to fill available space. i.e className="flex-1" in a React Native project (with nativewind for Tailwind support), it will make the element expand to fill available space within a flex container.
+
+***In React Native, local images must be imported using require(), and remote images need a valid uri.
+        eg: <Image source={require('../../assets/images/react-logo@3x.png')} />
+            <Image source={{ uri: 'https://example.com/react-logo.png' }} />
+
+
+***npx json-server --watch data.json --port 5000
+
+                Explanation:
+                                -> npx: Runs a package without installing it globally.
+                                -> json-server: A lightweight fake REST API server for testing and prototyping.
+                                -> --watch data.json: Watches data.json for changes and reloads automatically.
+                                -> --port 5000: Runs the server on port 5000 instead of the default 3000.
+
+                What It Does:
+                                -> Starts a mock REST API server using data.json as a database.
+                                -> Exposes RESTful endpoints based on the JSON file's structure.
+                                -> Supports CRUD operations (GET, POST, PUT, PATCH, DELETE).
+                                -> Auto-refreshes when data.json changes.
+
+
+//@ts-ignore is a TypeScript directive that tells the TypeScript compiler to ignore the next line during type checking.
+
+        const myVar: number = "Hello"; // ❌ TypeScript Error: Type 'string' is not assignable to type 'number'
+
+        //@ts-ignore
+        const myVar2: number = "Hello"; // ✅ No TypeScript error, but it's still incorrect
+
+
+
+
+****React hooks cannot be asynchronous functions because they need to return values synchronously.
+**useEffect does not return data, it only handles side effects.
+
+
+**  const {movies: allMovies} = useFetch<Movies>() --> movies: allMovies is renaming the movies property returned by useFetch to allMovies.
+
+
+**VirtualizedLists should never be nested inside plain ScrollViews with the same orientation because it can break windowing and other functionality - use another VirtualizedList-backed container instead.
+
+        -> The error message you're seeing occurs because you're nesting a FlatList (which is a virtualized list) inside a ScrollView. This is problematic because both components try to handle scrolling in the same direction, which can cause performance issues and unexpected behavior.
+
+        A virtualized list is a component that renders only the items currently visible on the screen, rather than rendering all items at once. This is an important optimization technique, especially for mobile applications.
+
+                Here's why virtualized lists are important:
+
+                        1. Performance optimization: When dealing with large datasets (like hundreds or thousands of items), rendering everything at once would consume too much memory and CPU, causing lag and poor performance.
+
+                        2. Memory efficiency: By only rendering what's visible, the app uses significantly less memory.
+
+                        3. Smooth scrolling: Since fewer DOM/native elements are being managed at once, scrolling remains smooth even with large lists.
+                        
+                        4. Window management: The term "windowing" in the error message refers to how the list maintains a "window" of rendered items as you scroll, adding new ones at the bottom and removing ones that scroll out of view at the top.
+
+                In React Native, components like 'FlatList' and 'SectionList' are virtualized lists. They handle all this complexity for you, maintaining a small window of rendered items and efficiently updating it as the user scrolls.
+
+                ** A ScrollView is a scrolling container, but it's not ideal as a container for mapping over a large collection of list items. This is because it will render the entire list of elements whether they're on-screen or not. A FlatList component only renders items on screen, which helps improve app performance for long lists.
+
+
+**The onPress prop doesn't work with TextInput components on the web platform. In React Native Web, the TextInput component doesn't translate the onPress event properly to a clickable event for web browsers.
+                -> Wrapp the entire component in a Pressable that handles the onPress event
+                -> 'Pressable' is a core React Native component that detects various types of press interactions. It's designed to be a more flexible alternative to touchable components like TouchableOpacity.
+                -> 'TouchableOpacity' is a React Native component that provides a wrapper for making views respond properly to touches with a visual opacity feedback. When pressed, the wrapped view's opacity decreases, creating a "dimming" effect that indicates to users that their touch was detected.
+
+
+* resizeMode is a property in React Native's <Image> component that determines how an image should be resized to fit its container. It is similar to object-fit in CSS.
+
+*** Yes, in an Expo app, you must prefix environment variables with EXPO_PUBLIC_ if you want to access them in your client-side JavaScript code.
+                - Expo enforces this for security reasons. Any environment variable without the EXPO_PUBLIC_ prefix will only be available at build time and will not be exposed to the client-side JavaScript.
+
+
+
+@react-native-masked-view/masked-view (Masked View) Explained :
+        🔹 Masked View is a React Native library that lets you "mask" or "cut out" parts of a view.
+        🔹 You can hide/show specific areas of a component based on a shape (like text, images, or gradients).
+        🔹 It is mainly used for creating cool effects like transparent text, gradient overlays, and custom shapes.
+
+        📌 How It Works:
+                - The maskElement defines the shape ("Hello World" text in this case).
+                - The image is placed behind it.
+                - The text "cuts out" the image, making the text appear as if it's part of the image.
+
+        🔹 It cuts out shapes (like text) from a background.
+        🔹 Example: If you put text "Hello" as a mask over an image, only the letters show the image while the rest is hidden.
+                ✅ The text "Hello" becomes transparent, showing the image inside the letters.
+                ✅ The rest of the image is hidden.
+
+                It's like cutting "Hello" out of an image! ✂️📸
+
+
+            <MaskedView
+              maskElement={
+                <Text style={{ fontSize: 50, fontWeight: 'bold', color: 'black' }}>
+                  Hello
+                </Text>
+              }>
+              {/* Background behind the text */}
+              <Image
+                source={{ uri: 'https://example.com/image.jpg' }}
+                style={{ width: 300, height: 100 }}
+              />
+            </MaskedView>
