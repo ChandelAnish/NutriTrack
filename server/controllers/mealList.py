@@ -16,7 +16,7 @@ async def generateDailyMealPlan(email, requestBody, session):
         requestBody.dietary_preferences,
         requestBody.allergies,
     )
-    
+    print(requestBody)
     # Check if meal plan already exists
     existing_plan = session.get(UserMealPlan, email)
 

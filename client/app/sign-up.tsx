@@ -15,6 +15,10 @@ import { useRouter } from "expo-router";
 const SignUpScreen: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -41,6 +45,47 @@ const SignUpScreen: React.FC = () => {
 
   const updateFormData = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    
+    // Clear errors when user types
+    if (field === "email" || field === "password") {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+    
+    // Validate as user types
+    if (field === "email") {
+      validateEmail(value);
+    } else if (field === "password") {
+      validatePassword(value);
+    }
+  };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@gmail\.com$/;
+    if (!email) {
+      setErrors(prev => ({ ...prev, email: "Email is required" }));
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setErrors(prev => ({ ...prev, email: "Email must end with @gmail.com" }));
+      return false;
+    }
+    setErrors(prev => ({ ...prev, email: "" }));
+    return true;
+  };
+
+  const validatePassword = (password: string) => {
+    const passwordRegex = /^(?=.[!@#$%^&(),.?":{}|<>]).{8,}$/;
+    if (!password) {
+      setErrors(prev => ({ ...prev, password: "Password is required" }));
+      return false;
+    } else if (!passwordRegex.test(password)) {
+      setErrors(prev => ({ 
+        ...prev, 
+        password: "Password must be at least 8 characters and include a special character" 
+      }));
+      return false;
+    }
+    setErrors(prev => ({ ...prev, password: "" }));
+    return true;
   };
 
   // Toggle selection for multi-select options
@@ -60,16 +105,19 @@ const SignUpScreen: React.FC = () => {
   };
 
   const handleSignUp = async () => {
-    // Basic validation
-    if (!formData.email || !formData.password) {
-      Alert.alert("Error", "Email and password are required");
+    // Validate both fields
+    const isEmailValid = validateEmail(formData.email);
+    const isPasswordValid = validatePassword(formData.password);
+
+    // If either validation fails, return early
+    if (!isEmailValid || !isPasswordValid) {
       return;
     }
 
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://192.168.29.11:8000/user/addUser",
+        `${process.env.EXPO_PUBLIC_SERVER_URL}/user/addUser`,
         {
           email: formData.email,
           password: formData.password,
@@ -87,8 +135,13 @@ const SignUpScreen: React.FC = () => {
       if (response.data) {
         router.push('/sign-in');
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to create account. Please try again.");
+    } catch (error: any) {
+      // Display backend validation errors if any
+      if (error.response && error.response.data && error.response.data.detail) {
+        Alert.alert("Error", error.response.data.detail);
+      } else {
+        Alert.alert("Error", "Failed to create account. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -110,7 +163,7 @@ const SignUpScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.email ? styles.inputError : null]}
               placeholder="Enter your email"
               placeholderTextColor="rgba(255,255,255,0.5)"
               keyboardType="email-address"
@@ -118,18 +171,20 @@ const SignUpScreen: React.FC = () => {
               value={formData.email}
               onChangeText={(text) => updateFormData("email", text)}
             />
+            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Password</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.password ? styles.inputError : null]}
               placeholder="Create a password"
               placeholderTextColor="rgba(255,255,255,0.5)"
               secureTextEntry
               value={formData.password}
               onChangeText={(text) => updateFormData("password", text)}
             />
+            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
           </View>
         </View>
 
@@ -338,6 +393,9 @@ const SignUpScreen: React.FC = () => {
   );
 };
 
+
+ 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -384,6 +442,15 @@ const styles = StyleSheet.create({
     color: "white",
     marginBottom: 8,
     fontSize: 14,
+  },
+   inputError: {
+    borderColor: '#ff6b6b',
+    borderWidth: 1,
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 12,
+    marginTop: 5,
   },
   input: {
     backgroundColor: "rgba(255,255,255,0.1)",
@@ -476,3 +543,4 @@ const styles = StyleSheet.create({
 });
 
 export default SignUpScreen;
+

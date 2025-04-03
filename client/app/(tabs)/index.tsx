@@ -1,57 +1,32 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
-import { useRouter } from 'expo-router';
-import { FontAwesome5 } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 
-const HomePage = () => {
+export default function HomePage() {
   const router = useRouter();
 
-  const handleSignIn = () => {
-    router.push('/sign-in');
-  };
-
-  const handleSignOut = async () => {
-    try {
-      // Clear all data from AsyncStorage
-      await AsyncStorage.clear();
-      // Navigate to sign-in screen
-      router.replace('/sign-in');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <View style={styles.container}>
       <View style={styles.header}>
-        <FontAwesome5 name="dumbbell" size={40} color="#06b6d4" />
-        <Text style={styles.title}>Fitness App</Text>
+        <TouchableOpacity
+          style={[styles.button, styles.signOutButton]}
+          onPress={() => router.push("/sign-in")}
+        >
+          <Text style={[styles.buttonText, { color: "#ff4d4d" }]}>Logout</Text>
+        </TouchableOpacity>
       </View>
-      
       <View style={styles.content}>
-        <Text style={styles.subtitle}>Your journey to fitness starts here</Text>
-        
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleSignIn}
-          >
-            <Text style={styles.buttonText}>Sign In</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.button, styles.signOutButton]} 
-            onPress={handleSignOut}
-          >
-            <Text style={styles.buttonText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
+        <Image 
+          source={require("../../assets/images/logo.png")} 
+          style={{ width: "100%", height: "50%", resizeMode: "contain" }} 
+        />
+        <Text style={styles.title}>Welcome to NutriApp!</Text>
+        <Text style={styles.subtitle}>
+          Your personal nutrition assistant to help you stay healthy and fit.
+        </Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -60,15 +35,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    gap: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    justifyContent: 'flex-end',
+    padding: 20,
   },
   content: {
     flex: 1,
@@ -76,32 +44,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+  },
   subtitle: {
     fontSize: 18,
     color: '#ffffff',
     marginBottom: 60,
     textAlign: 'center',
   },
-  buttonContainer: {
-    width: '100%',
-    gap: 20,
-  },
   button: {
-    backgroundColor: '#06b6d4', // cyan-500
-    paddingVertical: 16,
+    backgroundColor: '#06b6d4',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: 10,
-    alignItems: 'center',
   },
   signOutButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#ff4d4d', // Red border for sign out button
+    borderColor: '#ff4d4d',
   },
   buttonText: {
-    color: '#ffffff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
-
-export default HomePage;

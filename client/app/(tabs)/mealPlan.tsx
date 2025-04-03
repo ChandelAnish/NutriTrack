@@ -11,27 +11,31 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 
 const MEAL_PLAN_STORAGE_KEY = "meal_plan_data";
+const USER_DATA_KEY = "userData"; // Storage key for user profile data
 
 const MealPlanScreen = () => {
   const [mealPlanData, setMealPlanData] = useState<DailyMealPlan | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
-  const [email, setemail] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMealPlan = async () => {
       try {
         const storedData = await AsyncStorage.getItem(MEAL_PLAN_STORAGE_KEY);
         console.log("\nstoredData: \n", storedData);
-        const useremail = await AsyncStorage.getItem("email");
+        const userEmail = await AsyncStorage.getItem("email");
+        const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
+        
         if (storedData) {
           // If data exists in AsyncStorage, use it
           const parsedData = JSON.parse(storedData);
           setMealPlanData(parsedData);
         } else {
-          if (useremail) {
-            setemail(useremail);
-            const data = await getMealPlanData(useremail);
+          if (userEmail) {
+            setEmail(userEmail);
+            // Pass both userEmail and savedProfile to getMealPlanData
+            const data = await getMealPlanData(userEmail, savedProfile ? JSON.parse(savedProfile) : null);
             setMealPlanData(data);
             await AsyncStorage.setItem(MEAL_PLAN_STORAGE_KEY, JSON.stringify(data));
           } else {
@@ -89,14 +93,21 @@ const MealPlanScreen = () => {
         </Text>
         <TouchableOpacity
           className="mt-4 bg-cyan-500 px-6 py-2 rounded-lg"
-          onPress={() => {
+          onPress={async () => {
             setLoading(true);
             if (email) {
-              getMealPlanData(email).then((data) => {
+              try {
+                const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
+                const data = await getMealPlanData(email, savedProfile ? JSON.parse(savedProfile) : null);
                 setMealPlanData(data);
+              } catch (error) {
+                console.error("Error refreshing meal plan:", error);
+              } finally {
                 setLoading(false);
-              });
-            } else router.push("/sign-in");
+              }
+            } else {
+              router.push("/sign-in");
+            }
           }}
         >
           <Text className="text-white font-semibold">Try Again</Text>

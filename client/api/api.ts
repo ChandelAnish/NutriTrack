@@ -1,21 +1,19 @@
 import axios from 'axios';
 import { DailyMealPlan } from '@/types';
+import { UserProfile } from '@/app/(tabs)/profile';
 
-export const getMealPlanData = async(email: string): Promise<DailyMealPlan | null> => {
+export const getMealPlanData = async(email: string, userData:UserProfile): Promise<DailyMealPlan | null> => {
   try {
-    const { data } = await axios.post(`http://192.168.29.11:8000/DailyMealPlan/${email}`, {
-      age: 20,
-      weight: 50,
-      targetWeight: 70,
-      height: 170,
-      gender: "male",
-      daily_physical_activity: "goes to gym",
-      dietary_preferences: [
-        "veg"
-      ],
-      allergies: [
-        "banana"
-      ]
+    console.log(userData)
+    const { data } = await axios.post(`${process.env.EXPO_PUBLIC_SERVER_URL}/DailyMealPlan/${email}`, {
+      age: userData.age,
+      weight:userData.weight,
+      targetWeight:userData.targetWeight,
+      height:userData.height,
+      gender:userData.gender,
+      daily_physical_activity:userData.daily_physical_activity,
+      dietary_preferences:userData.dietary_preferences,
+      allergies: userData.allergies
     });
     // console.log("api: ", data);
     return data.meal_plan;

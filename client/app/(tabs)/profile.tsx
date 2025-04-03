@@ -13,6 +13,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import { Picker as RNPicker } from '@react-native-picker/picker';
+import axios from 'axios';
+import { getMealPlanData } from '@/api/api';
 
 // For Android compatibility
 const Picker = Platform.select({
@@ -23,15 +25,15 @@ const Picker = Platform.select({
 
 type Gender = 'male' | 'female' | 'other';
 
-interface UserProfile {
-  email: string; // Changed from name to email
+export interface UserProfile {
+  email: string;
   age: number;
   weight: number;
   targetWeight: number;
   height: number;
   gender: Gender;
-  activityLevel: string;
-  dietaryPreferences: string[];
+  daily_physical_activity: string;
+  dietary_preferences: string[];
   allergies: string[];
   profilePhoto?: string;
 }
@@ -51,8 +53,8 @@ const DEFAULT_PROFILE: UserProfile = {
   targetWeight: 0,
   height: 0,
   gender: 'male',
-  activityLevel: 'Sedentary',
-  dietaryPreferences: [],
+  daily_physical_activity: 'Sedentary',
+  dietary_preferences: [],
   allergies: [],
   profilePhoto: 'https://randomuser.me/api/portraits/lego/1.jpg', // Default avatar
 };
@@ -111,10 +113,37 @@ const ProfileSection = () => {
     }
   };
 
-  const handleSave = (): void => {
-    saveProfile(profile);
-    setIsEditing(false);
+  const handleSave = async () => {
+    console.log("🚀 handleSave triggered!");  // Check if this appears in console
+  
+    try {
+      saveProfile(profile);
+      console.log("Profile data before API call:", profile);
+      
+      if (!profile.email) {
+        console.error("❌ Error: Email is missing!");
+        return;
+      }
+  
+      const { data } = await axios.put(
+        `${process.env.EXPO_PUBLIC_SERVER_URL}/user/edit/${profile.email}`,
+        profile,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if(data){
+        // await AsyncStorage.setItem("email", data.email);
+        const mealPlan = await getMealPlanData(data.email,profile)
+        await AsyncStorage.setItem("meal_plan_data", JSON.stringify(mealPlan));
+        console.log("✅ UPDATED:", data);
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error("❌ Error updating user:", error);
+    }
   };
+  
 
   const handleCancel = (): void => {
     loadProfile(); // Reload the saved profile
@@ -122,10 +151,10 @@ const ProfileSection = () => {
   };
 
   const addDietaryPreference = (): void => {
-    if (newPreference.trim() && !profile.dietaryPreferences.includes(newPreference)) {
+    if (newPreference.trim() && !profile.dietary_preferences.includes(newPreference)) {
       const updatedProfile = {
         ...profile,
-        dietaryPreferences: [...profile.dietaryPreferences, newPreference.trim()],
+        dietary_preferences: [...profile.dietary_preferences, newPreference.trim()],
       };
       setProfile(updatedProfile);
       setNewPreference('');
@@ -143,7 +172,7 @@ const ProfileSection = () => {
     }
   };
 
-  const removeItem = (list: 'dietaryPreferences' | 'allergies', item: string): void => {
+  const removeItem = (list: 'dietary_preferences' | 'allergies', item: string): void => {
     setProfile({
       ...profile,
       [list]: profile[list].filter(i => i !== item),
@@ -211,10 +240,10 @@ const ProfileSection = () => {
           <Text style={[styles.sectionTitle, {color: colors.text}]}>Personal Information</Text>
         </View>
         
-        <ProfileField 
+        <ProfileField
           label="Email"
           value={profile.email || ''}
-          editable={isEditing}
+          editable={false}
           onChangeText={(text: string) => handleTextChange('email', text)}
           keyboardType="email-address"
           isDarkMode={isDarkMode}
@@ -300,14 +329,14 @@ const ProfileSection = () => {
         </View>
         <ProfileField 
           label="Activity"
-          value={profile.activityLevel || 'Sedentary'}
+          value={profile.daily_physical_activity || 'Sedentary'}
           editable={isEditing}
           isDarkMode={isDarkMode}
           colors={colors}
           renderEdit={() => (
             <Picker
-              selectedValue={profile.activityLevel || 'Sedentary'}
-              onValueChange={(value) => setProfile({...profile, activityLevel: value})}
+              selectedValue={profile.daily_physical_activity || 'Sedentary'}
+              onValueChange={(value) => setProfile({...profile, daily_physical_activity: value})}
               style={[styles.picker, {backgroundColor: colors.inputBackground, color: colors.text}]}
               dropdownIconColor={colors.accent}
             >
@@ -325,14 +354,14 @@ const ProfileSection = () => {
           <Feather name="heart" size={20} color={colors.accent} />
           <Text style={[styles.sectionTitle, {color: colors.text}]}>Dietary Preferences</Text>
         </View>
-        {(profile.dietaryPreferences?.length === 0 || !profile.dietaryPreferences) && !isEditing && (
+        {(profile.dietary_preferences?.length === 0 || !profile.dietary_preferences) && !isEditing && (
           <Text style={[styles.emptyText, {color: colors.subText}]}>No preferences added</Text>
         )}
-        {profile.dietaryPreferences?.map((item, index) => (
+        {profile.dietary_preferences?.map((item, index) => (
           <View key={index} style={[styles.tag, {backgroundColor: isDarkMode ? '#164e63' : '#e0f2fe'}]}>
             <Text style={{color: isDarkMode ? '#7dd3fc' : '#0369a1', marginRight: 4}}>{item}</Text>
             {isEditing && (
-              <TouchableOpacity onPress={() => removeItem('dietaryPreferences', item)}>
+              <TouchableOpacity onPress={() => removeItem('dietary_preferences', item)}>
                 <Feather name="x" size={16} color={isDarkMode ? '#7dd3fc' : '#f87171'} />
               </TouchableOpacity>
             )}
@@ -606,6 +635,8 @@ const styles = StyleSheet.create({
   },
   saveButtonContainer: {
     marginVertical: 24,
+    marginBottom: 30,
+    paddingBottom:100
   },
   saveButton: {
     flexDirection: 'row',

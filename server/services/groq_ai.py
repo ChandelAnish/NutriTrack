@@ -61,7 +61,16 @@ async def meal_plan_generator(
     dietary_preferences: Optional[List[str]] = None,
     allergies: Optional[List[str]] = None
 ):
-
+    print(
+    age,
+    weight,
+    target_weight,
+    height,
+    gender,
+    daily_physical_activity,
+    dietary_preferences,
+    allergies,
+    )
     # Calculate weight difference to determine goal
     weight_difference = target_weight - weight
     weight_goal = "maintenance"

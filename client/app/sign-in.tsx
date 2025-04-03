@@ -20,7 +20,7 @@ const SignInScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://192.168.29.11:8000/user/login', {
+      const response = await axios.post(`${process.env.EXPO_PUBLIC_SERVER_URL}/user/login`, {
         email,
         password,
       });
