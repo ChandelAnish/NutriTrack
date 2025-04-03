@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from sqlmodel import SQLModel, Session
 from .db import engine, get_session
 from typing import Annotated
-from .routers import mealList, users
+from .routers import mealList, users, userMealPlan
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -34,3 +34,6 @@ app.include_router(users.router)
 
 #including the mealList router
 app.include_router(mealList.router)
+
+#including the userMealPlan router
+app.include_router(userMealPlan.router)

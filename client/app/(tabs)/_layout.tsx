@@ -4,7 +4,6 @@ import { Tabs } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-
 const _layout = () => {
   return (
     <Tabs
@@ -38,11 +37,11 @@ const _layout = () => {
           title: "Home",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-              <FontAwesome
-                name="home"
-                size={24}
-                color={focused ? "#00BCD4" : "grey"}
-              />
+            <FontAwesome
+              name="home"
+              size={24}
+              color={focused ? "#00BCD4" : "grey"}
+            />
           ),
         }}
       />
@@ -67,11 +66,11 @@ const _layout = () => {
           title: "Profile",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-              <FontAwesome
-                name="user"
-                size={24}
-                color={focused ? "#00BCD4" : "grey"}
-              />
+            <FontAwesome
+              name="user"
+              size={24}
+              color={focused ? "#00BCD4" : "grey"}
+            />
           ),
         }}
       />

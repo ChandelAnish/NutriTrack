@@ -13,6 +13,6 @@ router = APIRouter(
 SessionDep = Annotated[Session, Depends(get_session)]
 
 #get mcq
-@router.post("/")
-async def getDailyMealPlan(requestBody: promptInput,session: SessionDep):
-    return await generateDailyMealPlan(requestBody,session)
+@router.post("/{email}")
+async def getDailyMealPlan( email: str, requestBody: promptInput,session: SessionDep):
+    return await generateDailyMealPlan(email,requestBody,session)

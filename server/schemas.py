@@ -2,16 +2,29 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 
 class userschema(BaseModel):
-    name: str
     email: str
     password: str
+    age: int
+    weight: int
+    targetWeight: int
+    height: int
+    gender: str
+    daily_physical_activity: str
+    dietary_preferences: List[str]
+    allergies: List[str]
 
 class responseUserSchema(BaseModel):
     id:int
-    name: str
     email: str
     password: str
-    
+    age: int
+    weight: int
+    targetWeight: int
+    height: int
+    gender: str
+    daily_physical_activity: str
+    dietary_preferences: List[str]
+    allergies: List[str]
 #Meal Plan schemas
 class Meal(BaseModel):
     name: str = Field(description="Name of the meal")
@@ -33,6 +46,9 @@ class DailyPlan(BaseModel):
     hydration: str = Field(description="Daily hydration recommendation")
     notes: Optional[str] = Field(description="Additional nutritional notes")
 
+class UserMealPlanSchema(BaseModel):
+    email: str
+    meal_plan: DailyPlan
 
 class promptInput(BaseModel):
     age:float
@@ -43,3 +59,4 @@ class promptInput(BaseModel):
     daily_physical_activity: str
     dietary_preferences: Optional[List[str]] = None
     allergies: Optional[List[str]] = None
+    

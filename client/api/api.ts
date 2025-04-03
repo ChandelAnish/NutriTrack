@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { DailyMealPlan } from '@/types';
 
-export const getMealPlanData = async(): Promise<DailyMealPlan | null> => {
+export const getMealPlanData = async(email: string): Promise<DailyMealPlan | null> => {
   try {
-    const { data } = await axios.post(`http://192.168.29.11:8000/DailyMealPlan`, {
+    const { data } = await axios.post(`http://192.168.29.11:8000/DailyMealPlan/${email}`, {
       age: 20,
       weight: 50,
       targetWeight: 70,
@@ -17,8 +17,8 @@ export const getMealPlanData = async(): Promise<DailyMealPlan | null> => {
         "banana"
       ]
     });
-    console.log("wow: ", data);
-    return data;
+    // console.log("api: ", data);
+    return data.meal_plan;
   } catch (error) {
     console.log(error);
     return null;

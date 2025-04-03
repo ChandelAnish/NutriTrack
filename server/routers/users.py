@@ -5,6 +5,7 @@ from typing import Annotated
 from ..schemas import userschema, responseUserSchema
 from ..controllers.users import getAllUsers, getSingleUsers, addNewUsers
 from ..models import User
+from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/user",
@@ -18,10 +19,13 @@ SessionDep = Annotated[Session, Depends(get_session)]
 def getUsers(session: SessionDep):
     return getAllUsers(session)
 
+class usersLogin(BaseModel):
+    email: str
+    password: str
 # get single user
-@router.get("/{id}", response_model=responseUserSchema)
-def getUser(id: int, session: SessionDep):
-    return getSingleUsers(id,session)
+@router.post("/login", response_model=responseUserSchema)
+def getUser(userdata: usersLogin, session: SessionDep):
+    return getSingleUsers(userdata,session)
 
 # add user
 @router.post("/addUser", response_model=responseUserSchema)
