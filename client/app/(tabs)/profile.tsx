@@ -4,11 +4,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Image,
   ScrollView,
   Platform,
   useColorScheme,
+  KeyboardAvoidingView,
+  ActivityIndicator,
+  Keyboard
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
@@ -47,7 +49,7 @@ const ACTIVITY_LEVELS = [
 ];
 
 const DEFAULT_PROFILE: UserProfile = {
-  email: '', // Changed from name to email
+  email: '',
   age: 0,
   weight: 0,
   targetWeight: 0,
@@ -56,7 +58,7 @@ const DEFAULT_PROFILE: UserProfile = {
   daily_physical_activity: 'Sedentary',
   dietary_preferences: [],
   allergies: [],
-  profilePhoto: 'https://randomuser.me/api/portraits/lego/1.jpg', // Default avatar
+  profilePhoto: 'https://randomuser.me/api/portraits/lego/1.jpg',
 };
 
 const STORAGE_KEY = 'userData';
@@ -70,7 +72,7 @@ const ProfileSection = () => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   
-  // Define theme colors
+  // Define theme colors based on dark/light mode
   const colors = {
     background: isDarkMode ? '#0f0D23' : '#f9fafb',
     cardBackground: isDarkMode ? '#1a1830' : 'white',
@@ -86,6 +88,25 @@ const ProfileSection = () => {
   const [newPreference, setNewPreference] = useState('');
   const [newAllergy, setNewAllergy] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Handle keyboard visibility
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setKeyboardVisible(true)
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   // Load profile data from AsyncStorage on component mount
   useEffect(() => {
@@ -114,7 +135,8 @@ const ProfileSection = () => {
   };
 
   const handleSave = async () => {
-    console.log("🚀 handleSave triggered!");  // Check if this appears in console
+    console.log("🚀 handleSave triggered!");
+    setIsSaving(true);
   
     try {
       saveProfile(profile);
@@ -122,6 +144,7 @@ const ProfileSection = () => {
       
       if (!profile.email) {
         console.error("❌ Error: Email is missing!");
+        setIsSaving(false);
         return;
       }
   
@@ -133,18 +156,18 @@ const ProfileSection = () => {
         }
       );
       if(data){
-        // await AsyncStorage.setItem("email", data.email);
-        const mealPlan = await getMealPlanData(data.email,profile)
+        const mealPlan = await getMealPlanData(data.email, profile);
         await AsyncStorage.setItem("meal_plan_data", JSON.stringify(mealPlan));
         console.log("✅ UPDATED:", data);
         setIsEditing(false);
       }
     } catch (error) {
       console.error("❌ Error updating user:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
   
-
   const handleCancel = (): void => {
     loadProfile(); // Reload the saved profile
     setIsEditing(false);
@@ -195,257 +218,318 @@ const ProfileSection = () => {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered, {backgroundColor: colors.background}]}>
-        <Text style={[styles.loadingText, {color: colors.text}]}>Loading profile...</Text>
+      <View className="flex-1 justify-center items-center" style={{backgroundColor: colors.background}}>
+        <Text className="text-base" style={{color: colors.text}}>Loading profile...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, {backgroundColor: colors.background}]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <Image 
-            source={{ uri: profile.profilePhoto }} 
-            style={[styles.avatar, {borderColor: colors.accent}]}
-          />
-          {isEditing && (
-            <TouchableOpacity style={[styles.editAvatarButton, {backgroundColor: colors.cardBackground, borderColor: colors.border}]}>
-              <Feather name="edit" size={16} color={colors.accent} />
-            </TouchableOpacity>
-          )}
-        </View>
-        
-        <TouchableOpacity 
-          style={[styles.editButton, {backgroundColor: colors.cardBackground, borderColor: colors.border}]}
-          onPress={() => isEditing ? handleCancel() : setIsEditing(true)}
-        >
-          <Text style={[styles.editButtonText, {color: colors.accent}]}>
-            {isEditing ? 'Cancel' : 'Edit Profile'}
-          </Text>
-          <Feather 
-            name={isEditing ? "x" : "edit-3"} 
-            size={16} 
-            color={colors.accent} 
-            style={styles.editIcon}
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Personal Information Section */}
-      <View style={[styles.section, {backgroundColor: colors.cardBackground, borderColor: colors.border}]}>
-        <View style={styles.sectionHeader}>
-          <Feather name="user" size={20} color={colors.accent} />
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Personal Information</Text>
-        </View>
-        
-        <ProfileField
-          label="Email"
-          value={profile.email || ''}
-          editable={false}
-          onChangeText={(text: string) => handleTextChange('email', text)}
-          keyboardType="email-address"
-          isDarkMode={isDarkMode}
-          colors={colors}
-        />
-        
-        <ProfileField 
-          label="Age"
-          value={profile.age?.toString() || '0'}
-          editable={isEditing}
-          keyboardType="numeric"
-          onChangeText={(text: string) => handleNumberChange('age', text)}
-          isDarkMode={isDarkMode}
-          colors={colors}
-        />
-        
-        <ProfileField 
-          label="Gender"
-          value={profile.gender || 'male'}
-          editable={isEditing}
-          isDarkMode={isDarkMode}
-          colors={colors}
-          renderEdit={() => (
-            <Picker
-              selectedValue={profile.gender || 'male'}
-              onValueChange={(value: string) => 
-                setProfile({...profile, gender: value as Gender})
-              }
-              style={[styles.picker, {backgroundColor: colors.inputBackground, color: colors.text}]}
-              dropdownIconColor={colors.accent}
-            >
-              <Picker.Item label="Male" value="male" style={{color: colors.text}} />
-              <Picker.Item label="Female" value="female" style={{color: colors.text}} />
-              <Picker.Item label="Other" value="other" style={{color: colors.text}} />
-            </Picker>
-          )}
-        />
-      </View>
-
-      {/* Body Metrics Section */}
-      <View style={[styles.section, {backgroundColor: colors.cardBackground, borderColor: colors.border}]}>
-        <View style={styles.sectionHeader}>
-          <Feather name="activity" size={20} color={colors.accent} />
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Body Metrics</Text>
-        </View>
-        
-        <ProfileField 
-          label="Height (cm)"
-          value={profile.height?.toString() || '0'}
-          editable={isEditing}
-          keyboardType="numeric"
-          onChangeText={(text: string) => handleNumberChange('height', text)}
-          isDarkMode={isDarkMode}
-          colors={colors}
-        />
-        
-        <ProfileField 
-          label="Weight (kg)"
-          value={profile.weight?.toString() || '0'}
-          editable={isEditing}
-          keyboardType="numeric"
-          onChangeText={(text: string) => handleNumberChange('weight', text)}
-          isDarkMode={isDarkMode}
-          colors={colors}
-        />
-        
-        <ProfileField 
-          label="Target Weight (kg)"
-          value={profile.targetWeight?.toString() || '0'}
-          editable={isEditing}
-          keyboardType="numeric"
-          onChangeText={(text: string) => handleNumberChange('targetWeight', text)}
-          isDarkMode={isDarkMode}
-          colors={colors}
-        />
-      </View>
-
-      {/* Activity Level Section */}
-      <View style={[styles.section, {backgroundColor: colors.cardBackground, borderColor: colors.border}]}>
-        <View style={styles.sectionHeader}>
-          <Feather name="bar-chart-2" size={20} color={colors.accent} />
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Activity Level</Text>
-        </View>
-        <ProfileField 
-          label="Activity"
-          value={profile.daily_physical_activity || 'Sedentary'}
-          editable={isEditing}
-          isDarkMode={isDarkMode}
-          colors={colors}
-          renderEdit={() => (
-            <Picker
-              selectedValue={profile.daily_physical_activity || 'Sedentary'}
-              onValueChange={(value) => setProfile({...profile, daily_physical_activity: value})}
-              style={[styles.picker, {backgroundColor: colors.inputBackground, color: colors.text}]}
-              dropdownIconColor={colors.accent}
-            >
-              {ACTIVITY_LEVELS.map(level => (
-                <Picker.Item key={level} label={level} value={level} style={{color: colors.text}} />
-              ))}
-            </Picker>
-          )}
-        />
-      </View>
-
-      {/* Dietary Preferences Section */}
-      <View style={[styles.section, {backgroundColor: colors.cardBackground, borderColor: colors.border}]}>
-        <View style={styles.sectionHeader}>
-          <Feather name="heart" size={20} color={colors.accent} />
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Dietary Preferences</Text>
-        </View>
-        {(profile.dietary_preferences?.length === 0 || !profile.dietary_preferences) && !isEditing && (
-          <Text style={[styles.emptyText, {color: colors.subText}]}>No preferences added</Text>
-        )}
-        {profile.dietary_preferences?.map((item, index) => (
-          <View key={index} style={[styles.tag, {backgroundColor: isDarkMode ? '#164e63' : '#e0f2fe'}]}>
-            <Text style={{color: isDarkMode ? '#7dd3fc' : '#0369a1', marginRight: 4}}>{item}</Text>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1"
+      style={{backgroundColor: colors.background}}
+    >
+      <ScrollView 
+        className="flex-1 px-4 pb-40"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={keyboardVisible ? {paddingBottom: 200} : {}}
+      >
+        {/* Header */}
+        <View className="flex-row justify-between items-center py-4">
+          <View className="relative">
+            <Image 
+              source={{ uri: profile.profilePhoto }} 
+              className="w-20 h-20 rounded-full border-2"
+              style={{borderColor: colors.accent}}
+            />
             {isEditing && (
-              <TouchableOpacity onPress={() => removeItem('dietary_preferences', item)}>
-                <Feather name="x" size={16} color={isDarkMode ? '#7dd3fc' : '#f87171'} />
+              <TouchableOpacity 
+                className="absolute right-0 bottom-0 rounded-xl p-1 border"
+                style={{backgroundColor: colors.cardBackground, borderColor: colors.border}}
+              >
+                <Feather name="edit" size={16} color={colors.accent} />
               </TouchableOpacity>
             )}
           </View>
-        ))}
-        {isEditing && (
-          <View style={styles.addItemContainer}>
-            <TextInput
-              style={[styles.addItemInput, {
-                backgroundColor: colors.inputBackground, 
-                borderColor: colors.border,
-                color: colors.text
-              }]}
-              value={newPreference}
-              onChangeText={setNewPreference}
-              placeholder="Add new preference"
-              placeholderTextColor={colors.subText}
-              onSubmitEditing={addDietaryPreference}
+          
+          <TouchableOpacity 
+            className="flex-row items-center px-3 py-2 rounded-full border"
+            style={{backgroundColor: colors.cardBackground, borderColor: colors.border}}
+            onPress={() => isEditing ? handleCancel() : setIsEditing(true)}
+          >
+            <Text className="font-semibold mr-1" style={{color: colors.accent}}>
+              {isEditing ? 'Cancel' : 'Edit Profile'}
+            </Text>
+            <Feather 
+              name={isEditing ? "x" : "edit-3"} 
+              size={16} 
+              color={colors.accent} 
+              className="ml-1"
             />
-            <TouchableOpacity 
-              style={[styles.addButton, {backgroundColor: isDarkMode ? '#164e63' : '#e0f2fe'}]} 
-              onPress={addDietaryPreference}
-            >
-              <Feather name="plus" size={20} color={colors.accent} />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      {/* Allergies Section */}
-      <View style={[styles.section, {backgroundColor: colors.cardBackground, borderColor: colors.border}]}>
-        <View style={styles.sectionHeader}>
-          <Feather name="alert-triangle" size={20} color={colors.accent} />
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>Allergies</Text>
-        </View>
-        {(profile.allergies?.length === 0 || !profile.allergies) && !isEditing && (
-          <Text style={[styles.emptyText, {color: colors.subText}]}>No allergies added</Text>
-        )}
-        {profile.allergies?.map((item, index) => (
-          <View key={index} style={[styles.tag, styles.allergyTag, {
-            backgroundColor: isDarkMode ? '#602A2A' : '#fee2e2'
-          }]}>
-            <Text style={{color: isDarkMode ? '#fca5a5' : '#b91c1c', marginRight: 4}}>{item}</Text>
-            {isEditing && (
-              <TouchableOpacity onPress={() => removeItem('allergies', item)}>
-                <Feather name="x" size={16} color={isDarkMode ? '#fca5a5' : '#f87171'} />
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
-        {isEditing && (
-          <View style={styles.addItemContainer}>
-            <TextInput
-              style={[styles.addItemInput, {
-                backgroundColor: colors.inputBackground, 
-                borderColor: colors.border,
-                color: colors.text
-              }]}
-              value={newAllergy}
-              onChangeText={setNewAllergy}
-              placeholder="Add new allergy"
-              placeholderTextColor={colors.subText}
-              onSubmitEditing={addAllergy}
-            />
-            <TouchableOpacity 
-              style={[styles.addButton, {backgroundColor: isDarkMode ? '#164e63' : '#e0f2fe'}]} 
-              onPress={addAllergy}
-            >
-              <Feather name="plus" size={20} color={colors.accent} />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      {/* Save Button */}
-      {isEditing && (
-        <View style={styles.saveButtonContainer}>
-          <TouchableOpacity style={[styles.saveButton, {backgroundColor: colors.accent}]} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-            <Feather name="check" size={20} color="white" style={styles.saveIcon} />
           </TouchableOpacity>
         </View>
-      )}
-    </ScrollView>
+
+        {/* Personal Information Section */}
+        <View 
+          className="rounded-xl mb-4 p-4 shadow-sm"
+          style={{backgroundColor: colors.cardBackground, borderColor: colors.border}}
+        >
+          <View className="flex-row items-center mb-3">
+            <Feather name="user" size={20} color={colors.accent} />
+            <Text className="text-lg font-semibold ml-2" style={{color: colors.text}}>Personal Information</Text>
+          </View>
+          
+          <ProfileField
+            label="Email"
+            value={profile.email || ''}
+            editable={false}
+            onChangeText={(text: string) => handleTextChange('email', text)}
+            keyboardType="email-address"
+            isDarkMode={isDarkMode}
+            colors={colors}
+          />
+          
+          <ProfileField 
+            label="Age"
+            value={profile.age?.toString() || '0'}
+            editable={isEditing}
+            keyboardType="numeric"
+            onChangeText={(text: string) => handleNumberChange('age', text)}
+            isDarkMode={isDarkMode}
+            colors={colors}
+          />
+          
+          <ProfileField 
+            label="Gender"
+            value={profile.gender || 'male'}
+            editable={isEditing}
+            isDarkMode={isDarkMode}
+            colors={colors}
+            renderEdit={() => (
+              <View className="border rounded-lg" style={{borderColor: colors.border, backgroundColor: colors.inputBackground}}>
+                <Picker
+                  selectedValue={profile.gender || 'male'}
+                  onValueChange={(value: string) => 
+                    setProfile({...profile, gender: value as Gender})
+                  }
+                  className="text-base"
+                  dropdownIconColor={colors.accent}
+                  style={{color: colors.text}}
+                >
+                  <Picker.Item label="Male" value="male" style={{color: colors.text}} />
+                  <Picker.Item label="Female" value="female" style={{color: colors.text}} />
+                  <Picker.Item label="Other" value="other" style={{color: colors.text}} />
+                </Picker>
+              </View>
+            )}
+          />
+        </View>
+
+        {/* Body Metrics Section */}
+        <View 
+          className="rounded-xl mb-4 p-4 shadow-sm"
+          style={{backgroundColor: colors.cardBackground, borderColor: colors.border}}
+        >
+          <View className="flex-row items-center mb-3">
+            <Feather name="activity" size={20} color={colors.accent} />
+            <Text className="text-lg font-semibold ml-2" style={{color: colors.text}}>Body Metrics</Text>
+          </View>
+          
+          <ProfileField 
+            label="Height (cm)"
+            value={profile.height?.toString() || '0'}
+            editable={isEditing}
+            keyboardType="numeric"
+            onChangeText={(text: string) => handleNumberChange('height', text)}
+            isDarkMode={isDarkMode}
+            colors={colors}
+          />
+          
+          <ProfileField 
+            label="Weight (kg)"
+            value={profile.weight?.toString() || '0'}
+            editable={isEditing}
+            keyboardType="numeric"
+            onChangeText={(text: string) => handleNumberChange('weight', text)}
+            isDarkMode={isDarkMode}
+            colors={colors}
+          />
+          
+          <ProfileField 
+            label="Target Weight (kg)"
+            value={profile.targetWeight?.toString() || '0'}
+            editable={isEditing}
+            keyboardType="numeric"
+            onChangeText={(text: string) => handleNumberChange('targetWeight', text)}
+            isDarkMode={isDarkMode}
+            colors={colors}
+          />
+        </View>
+
+        {/* Activity Level Section */}
+        <View 
+          className="rounded-xl mb-4 p-4 shadow-sm"
+          style={{backgroundColor: colors.cardBackground, borderColor: colors.border}}
+        >
+          <View className="flex-row items-center mb-3">
+            <Feather name="bar-chart-2" size={20} color={colors.accent} />
+            <Text className="text-lg font-semibold ml-2" style={{color: colors.text}}>Activity Level</Text>
+          </View>
+          <ProfileField 
+            label="Activity"
+            value={profile.daily_physical_activity || 'Sedentary'}
+            editable={isEditing}
+            isDarkMode={isDarkMode}
+            colors={colors}
+            renderEdit={() => (
+              <View className="border rounded-lg" style={{borderColor: colors.border, backgroundColor: colors.inputBackground}}>
+                <Picker
+                  selectedValue={profile.daily_physical_activity || 'Sedentary'}
+                  onValueChange={(value) => setProfile({...profile, daily_physical_activity: value})}
+                  className="text-base"
+                  dropdownIconColor={colors.accent}
+                  style={{color: colors.text}}
+                >
+                  {ACTIVITY_LEVELS.map(level => (
+                    <Picker.Item key={level} label={level} value={level} style={{color: colors.text}} />
+                  ))}
+                </Picker>
+              </View>
+            )}
+          />
+        </View>
+
+        {/* Dietary Preferences Section */}
+        <View 
+          className="rounded-xl mb-4 p-4 shadow-sm"
+          style={{backgroundColor: colors.cardBackground, borderColor: colors.border}}
+        >
+          <View className="flex-row items-center mb-3">
+            <Feather name="heart" size={20} color={colors.accent} />
+            <Text className="text-lg font-semibold ml-2" style={{color: colors.text}}>Dietary Preferences</Text>
+          </View>
+          {(profile.dietary_preferences?.length === 0 || !profile.dietary_preferences) && !isEditing && (
+            <Text className="text-sm italic" style={{color: colors.subText}}>No preferences added</Text>
+          )}
+          <View className="flex-row flex-wrap">
+            {profile.dietary_preferences?.map((item, index) => (
+              <View 
+                key={index} 
+                className="flex-row items-center px-3 py-1.5 rounded-2xl mr-2 mb-2"
+                style={{backgroundColor: isDarkMode ? '#164e63' : '#e0f2fe'}}
+              >
+                <Text style={{color: isDarkMode ? '#7dd3fc' : '#0369a1', marginRight: 4}}>{item}</Text>
+                {isEditing && (
+                  <TouchableOpacity onPress={() => removeItem('dietary_preferences', item)}>
+                    <Feather name="x" size={16} color={isDarkMode ? '#7dd3fc' : '#f87171'} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </View>
+          {isEditing && (
+            <View className="flex-row items-center mt-2">
+              <TextInput
+                className="flex-1 border rounded-lg p-2.5 mr-2"
+                style={{
+                  backgroundColor: colors.inputBackground, 
+                  borderColor: colors.border,
+                  color: colors.text
+                }}
+                value={newPreference}
+                onChangeText={setNewPreference}
+                placeholder="Add new preference"
+                placeholderTextColor={colors.subText}
+                onSubmitEditing={addDietaryPreference}
+              />
+              <TouchableOpacity 
+                className="w-10 h-10 rounded-full justify-center items-center"
+                style={{backgroundColor: isDarkMode ? '#164e63' : '#e0f2fe'}}
+                onPress={addDietaryPreference}
+              >
+                <Feather name="plus" size={20} color={colors.accent} />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Allergies Section */}
+        <View 
+          className={`rounded-xl mb-4 p-4 shadow-sm ${!isEditing && "mb-32"}`}
+          style={{backgroundColor: colors.cardBackground, borderColor: colors.border}}
+        >
+          <View className="flex-row items-center mb-3">
+            <Feather name="alert-triangle" size={20} color={colors.accent} />
+            <Text className="text-lg font-semibold ml-2" style={{color: colors.text}}>Allergies</Text>
+          </View>
+          {(profile.allergies?.length === 0 || !profile.allergies) && !isEditing && (
+            <Text className="text-sm italic" style={{color: colors.subText}}>No allergies added</Text>
+          )}
+          <View className="flex-row flex-wrap">
+            {profile.allergies?.map((item, index) => (
+              <View 
+                key={index} 
+                className="flex-row items-center px-3 py-1.5 rounded-2xl mr-2 mb-2"
+                style={{backgroundColor: isDarkMode ? '#602A2A' : '#fee2e2'}}
+              >
+                <Text style={{color: isDarkMode ? '#fca5a5' : '#b91c1c', marginRight: 4}}>{item}</Text>
+                {isEditing && (
+                  <TouchableOpacity onPress={() => removeItem('allergies', item)}>
+                    <Feather name="x" size={16} color={isDarkMode ? '#fca5a5' : '#f87171'} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </View>
+          {isEditing && (
+            <View className="flex-row items-center mt-2">
+              <TextInput
+                className="flex-1 border rounded-lg p-2.5 mr-2"
+                style={{
+                  backgroundColor: colors.inputBackground, 
+                  borderColor: colors.border,
+                  color: colors.text
+                }}
+                value={newAllergy}
+                onChangeText={setNewAllergy}
+                placeholder="Add new allergy"
+                placeholderTextColor={colors.subText}
+                onSubmitEditing={addAllergy}
+              />
+              <TouchableOpacity 
+                className="w-10 h-10 rounded-full justify-center items-center"
+                style={{backgroundColor: isDarkMode ? '#164e63' : '#e0f2fe'}}
+                onPress={addAllergy}
+              >
+                <Feather name="plus" size={20} color={colors.accent} />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Save Button */}
+        {isEditing && (
+          <View className="my-6 mb-32">
+            <TouchableOpacity 
+              className="flex-row items-center justify-center py-3.5 rounded-lg"
+              style={{backgroundColor: colors.accent}}
+              onPress={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Text className="text-white text-base font-semibold mr-2">Save Changes</Text>
+                  <Feather name="check" size={20} color="white" className="ml-1" />
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -476,18 +560,19 @@ const ProfileField = ({
   renderEdit,
   colors
 }: ProfileFieldProps) => (
-  <View style={styles.field}>
-    <Text style={[styles.fieldLabel, {color: colors.subText}]}>{label}</Text>
+  <View className="mb-3">
+    <Text className="text-sm mb-1" style={{color: colors.subText}}>{label}</Text>
     {editable ? (
       renderEdit ? (
         renderEdit()
       ) : (
         <TextInput
-          style={[styles.fieldInput, {
+          className="text-base border rounded-lg p-2.5"
+          style={{
             backgroundColor: colors.inputBackground,
             borderColor: colors.border,
             color: colors.text
-          }]}
+          }}
           value={value}
           onChangeText={onChangeText}
           keyboardType={keyboardType}
@@ -495,165 +580,9 @@ const ProfileField = ({
         />
       )
     ) : (
-      <Text style={[styles.fieldValue, {color: colors.text}]}>{value}</Text>
+      <Text className="text-base py-2" style={{color: colors.text}}>{value}</Text>
     )}
   </View>
 );
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  avatarContainer: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 2,
-  },
-  editAvatarButton: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    borderRadius: 12,
-    padding: 4,
-    borderWidth: 1,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  editButtonText: {
-    fontWeight: '600',
-    marginRight: 4,
-  },
-  editIcon: {
-    marginLeft: 4,
-  },
-  section: {
-    borderRadius: 12,
-    marginBottom: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  field: {
-    marginBottom: 12,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  fieldValue: {
-    fontSize: 16,
-    paddingVertical: 8,
-  },
-  fieldInput: {
-    fontSize: 16,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-  },
-  picker: {
-    borderWidth: 1,
-    borderRadius: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    fontStyle: 'italic',
-  },
-  tag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
-    alignSelf: 'flex-start',
-  },
-  tagText: {
-    marginRight: 4,
-  },
-  allergyTag: {
-    // Styles in render with dark mode colors
-  },
-  allergyTagText: {
-    marginRight: 4,
-  },
-  addItemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  addItemInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginRight: 8,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  saveButtonContainer: {
-    marginVertical: 24,
-    marginBottom: 30,
-    paddingBottom:100
-  },
-  saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 10,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  saveIcon: {
-    marginLeft: 4,
-  },
-});
 
 export default ProfileSection;

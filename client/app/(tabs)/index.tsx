@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomePage() {
   const router = useRouter();
@@ -9,7 +10,7 @@ export default function HomePage() {
       <View style={styles.header}>
         <TouchableOpacity
           style={[styles.button, styles.signOutButton]}
-          onPress={() => router.push("/sign-in")}
+          onPress={async() =>{ router.push("/sign-in"); await AsyncStorage.clear();}}
         >
           <Text style={[styles.buttonText, { color: "#ff4d4d" }]}>Logout</Text>
         </TouchableOpacity>

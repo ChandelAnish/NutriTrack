@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -8,7 +8,7 @@ import MealCard from "@/components/MealCard";
 import ProgressBar from "@/components/ProgressBar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 
 const MEAL_PLAN_STORAGE_KEY = "meal_plan_data";
 const USER_DATA_KEY = "userData"; // Storage key for user profile data
@@ -19,23 +19,29 @@ const MealPlanScreen = () => {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
 
+  // Initial data loading
   useEffect(() => {
     const fetchMealPlan = async () => {
       try {
         const storedData = await AsyncStorage.getItem(MEAL_PLAN_STORAGE_KEY);
-        console.log("\nstoredData: \n", storedData);
-        const userEmail = await AsyncStorage.getItem("email");
-        const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
+        const parsedData = JSON.parse(storedData ?? '{}');
         
-        if (storedData) {
+        const userEmail = await AsyncStorage.getItem("email");
+        
+        const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
+        const parsedSavedProfile = JSON.parse(savedProfile ?? '{}');
+        
+        if (storedData && Object.keys(parsedData).length != 0) {
           // If data exists in AsyncStorage, use it
-          const parsedData = JSON.parse(storedData);
+          console.log("\nstoredData inside: \n", parsedData);
           setMealPlanData(parsedData);
         } else {
-          if (userEmail) {
+          if (userEmail && Object.keys(parsedSavedProfile).length != 0) {
+            console.log("email: ", userEmail);
+            console.log("saved User profile : ", parsedSavedProfile);
             setEmail(userEmail);
             // Pass both userEmail and savedProfile to getMealPlanData
-            const data = await getMealPlanData(userEmail, savedProfile ? JSON.parse(savedProfile) : null);
+            const data = await getMealPlanData(userEmail, parsedSavedProfile);
             setMealPlanData(data);
             await AsyncStorage.setItem(MEAL_PLAN_STORAGE_KEY, JSON.stringify(data));
           } else {
@@ -51,6 +57,56 @@ const MealPlanScreen = () => {
 
     fetchMealPlan();
   }, []);
+
+  // Check for data changes when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      const checkStorageChanges = async () => {
+        try {
+          const storedData = await AsyncStorage.getItem(MEAL_PLAN_STORAGE_KEY);
+          const userEmail = await AsyncStorage.getItem("email");
+          
+          const parsedData = JSON.parse(storedData ?? '{}');
+          if (storedData && Object.keys(parsedData).length != 0) {
+              console.log(parsedData)
+              console.log("Found updated data in AsyncStorage, refreshing view");
+              setMealPlanData(parsedData);
+            
+          } else {
+            console.log("No data found in AsyncStorage on tab focus");
+            
+            // If no data but we have email, try to fetch new data
+            const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
+            const parsedSavedProfile = JSON.parse(savedProfile ?? '{}')
+            if (userEmail && savedProfile && Object.keys(parsedSavedProfile).length != 0) {
+
+              try {
+                const data = await getMealPlanData(
+                  userEmail, 
+                  parsedSavedProfile
+                );
+                setMealPlanData(data);
+                await AsyncStorage.setItem(MEAL_PLAN_STORAGE_KEY, JSON.stringify(data));
+              } catch (fetchError) {
+                console.error("Error fetching meal plan on tab focus:", fetchError);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error checking AsyncStorage on tab focus:", error);
+        }
+      };
+      
+      // Skip the check during initial load to avoid duplicate processing
+      if (!loading) {
+        checkStorageChanges();
+      }
+      
+      return () => {
+        // Any cleanup if needed
+      };
+    }, [email, loading])
+  );
 
   // Track completed meals
   const [completedMeals, setCompletedMeals] = useState<Record<string, boolean>>(
@@ -100,6 +156,8 @@ const MealPlanScreen = () => {
                 const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
                 const data = await getMealPlanData(email, savedProfile ? JSON.parse(savedProfile) : null);
                 setMealPlanData(data);
+                // Make sure to update AsyncStorage when refreshing
+                await AsyncStorage.setItem(MEAL_PLAN_STORAGE_KEY, JSON.stringify(data));
               } catch (error) {
                 console.error("Error refreshing meal plan:", error);
               } finally {
@@ -118,7 +176,7 @@ const MealPlanScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-[#0f0D23]">
-      <ScrollView className="flex-1 px-4 pt-4">
+      <ScrollView className="flex-1 px-4 pt-4 pb-32">
         {/* Header */}
         <View className="flex-row justify-between items-center mb-6">
           <View>
@@ -187,7 +245,7 @@ const MealPlanScreen = () => {
           ))}
 
         {/* Notes section */}
-        <View className="bg-[#1a1933] rounded-xl p-4 mb-8">
+        <View className="bg-[#1a1933] rounded-xl p-4 mb-36">
           <View className="flex-row items-center mb-2">
             <Feather name="info" size={16} color="#06b6d4" />
             <Text className="text-white font-bold ml-2">Notes</Text>

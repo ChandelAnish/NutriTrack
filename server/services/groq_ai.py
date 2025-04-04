@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
-from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
@@ -10,18 +10,45 @@ from ..schemas import DailyPlan
 
 load_dotenv()
 
+# Initialize all LLM models
+# google_llm = ChatGoogleGenerativeAI(
+#     model="gemini-1.5-pro",
+#     temperature=0.2,
+#     max_tokens=4096,
+#     timeout=60,
+#     max_retries=2,
+# )
 
-
-google_llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-pro",
+llama70_llm = ChatGroq(
+    model="llama-3.3-70b-versatile", # 6000 token
     temperature=0.2,
     max_tokens=4096,
     timeout=60,
     max_retries=2,
 )
-
-groq_llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+gemma2_llm = ChatGroq(
+    model="gemma2-9b-it",# 15000 token
+    temperature=0.2,
+    max_tokens=4096,
+    timeout=60,
+    max_retries=2,
+)
+llamaSpecdec_llm = ChatGroq(
+    model="llama-3.3-70b-specdec",# 15000 token
+    temperature=0.2,
+    max_tokens=4096,
+    timeout=60,
+    max_retries=2,
+)
+llamaVision_llm = ChatGroq(
+    model="llama-3.2-90b-vision-preview", # 7000 token
+    temperature=0.2,
+    max_tokens=4096,
+    timeout=60,
+    max_retries=2,
+)
+deepseek_llm = ChatGroq(
+    model="deepseek-r1-distill-qwen-32b", # 6000 token
     temperature=0.2,
     max_tokens=4096,
     timeout=60,
@@ -48,9 +75,6 @@ Remember to:
     partial_variables={"format_instructions": parser.get_format_instructions()},
 )
 
-# chain = prompt | google_llm | parser
-chain = prompt | groq_llm | parser
-
 async def meal_plan_generator(
     age: float,
     weight: float,
@@ -61,16 +85,6 @@ async def meal_plan_generator(
     dietary_preferences: Optional[List[str]] = None,
     allergies: Optional[List[str]] = None
 ):
-    print(
-    age,
-    weight,
-    target_weight,
-    height,
-    gender,
-    daily_physical_activity,
-    dietary_preferences,
-    allergies,
-    )
     # Calculate weight difference to determine goal
     weight_difference = target_weight - weight
     weight_goal = "maintenance"
@@ -98,23 +112,51 @@ async def meal_plan_generator(
 
     query += f"""
 ### Requirements
-- Generate a complete daily meal plan with 3 main meals and 2 snacks
-- For each meal and snack, include specific foods with portion sizes in grams
-- Include calorie and macronutrient breakdown for each meal
-- Calculate appropriate daily caloric intake based on user's stats and goals:
-  - For weight loss: 300-500 calorie deficit
-  - For weight gain: 300-500 calorie surplus
-  - For maintenance: balanced calories
-- Ensure adequate protein (1.6-2.2g per kg of body weight for active individuals)
-- Focus on whole, unprocessed foods with appropriate variety
-- Include daily hydration recommendations
+    **important**
+        - Generate a complete daily meal plan with 3 main meals and 2 snacks strictly considering the User Details.
+        - Strictly follow the user's dietary preferences (e.g., vegetarian, vegan, keto).
+        - Exclude any foods the user is allergic to.
+        
+    - For each meal and snack, include specific foods with portion sizes in grams.
+    - Include calorie and macronutrient breakdown for each meal
+    - Calculate appropriate daily caloric intake based on user's stats and goals:
+    - For weight loss: 300-500 calorie deficit
+    - For weight gain: 300-500 calorie surplus
+    - For maintenance: balanced calories
+    - Ensure adequate protein (1.6-2.2g per kg of body weight for active individuals)
+    - Focus on whole, unprocessed foods with appropriate variety
+    - Include daily hydration recommendations
+    - Include a short Personalized user-specific note at the end of the meal plan.
 """
 
-    try:
-        result = chain.invoke({"query": query})
-        return result
-    except Exception as e:
-        print(f"Error generating meal plan: {e}")
-        # Fallback to Groq if Google fails
-        fallback_chain = prompt | google_llm | parser
-        return fallback_chain.invoke({"query": query})
+    # Define a list of LLMs to try in order of preference
+    llm_models = [
+        ("llama70_llm", llama70_llm),
+        ("gemma2_llm", gemma2_llm),
+        ("llamaSpecdec_llm", llamaSpecdec_llm),
+        ("llamaVision_llm", llamaVision_llm),
+        ("deepseek_llm", deepseek_llm),
+        # ("google_llm", google_llm)
+    ]
+    
+    last_exception = None
+    
+    # Try each LLM in sequence until one succeeds
+    for model_name, model in llm_models:
+        try:
+            print(f"Trying {model_name}...")
+            chain = prompt | model | parser
+            result = chain.invoke({"query": query})
+            print(f"Successfully generated meal plan using {model_name}")
+            return result
+        except Exception as e:
+            print(f"Error with {model_name}: {e}")
+            last_exception = e
+            continue
+    
+    # If all models fail, raise the last exception
+    if last_exception:
+        print("All LLM models failed")
+        raise last_exception
+    
+    return None
