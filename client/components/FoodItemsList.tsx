@@ -14,7 +14,7 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({ foods }) => {
           <View key={index} className="flex-row items-center mb-2">
             <Text className="text-lg mr-2">{food.emoji}</Text>
             <Text className="text-white text-base flex-1">{food.name}</Text>
-            <Text className="text-gray-400">{food.portion_size}</Text>
+            <Text className="text-gray-400">{food.portion}</Text>
           </View>
         );
       })}

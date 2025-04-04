@@ -12,7 +12,7 @@ router = APIRouter(
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
-@router.get("/meal-plan/{email}", response_model=UserMealPlanSchema)
+@router.get("/get-meal-plan/{email}", response_model=UserMealPlanSchema)
 def getUserMealPlan(email: str, session: SessionDep):
     user_meal_plan = session.get(UserMealPlan, email)
     if not user_meal_plan:

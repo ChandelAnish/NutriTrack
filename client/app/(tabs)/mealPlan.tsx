@@ -1,7 +1,19 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import axios from "axios";
 import { DailyMealPlan } from "@/types";
 import { getMealPlanData } from "@/api/api";
 import MealCard from "@/components/MealCard";
@@ -18,19 +30,22 @@ const MealPlanScreen = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [userPrompt, setUserPrompt] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Initial data loading
   useEffect(() => {
     const fetchMealPlan = async () => {
       try {
         const storedData = await AsyncStorage.getItem(MEAL_PLAN_STORAGE_KEY);
-        const parsedData = JSON.parse(storedData ?? '{}');
-        
+        const parsedData = JSON.parse(storedData ?? "{}");
+
         const userEmail = await AsyncStorage.getItem("email");
-        
+
         const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
-        const parsedSavedProfile = JSON.parse(savedProfile ?? '{}');
-        
+        const parsedSavedProfile = JSON.parse(savedProfile ?? "{}");
+
         if (storedData && Object.keys(parsedData).length != 0) {
           // If data exists in AsyncStorage, use it
           console.log("\nstoredData inside: \n", parsedData);
@@ -43,7 +58,10 @@ const MealPlanScreen = () => {
             // Pass both userEmail and savedProfile to getMealPlanData
             const data = await getMealPlanData(userEmail, parsedSavedProfile);
             setMealPlanData(data);
-            await AsyncStorage.setItem(MEAL_PLAN_STORAGE_KEY, JSON.stringify(data));
+            await AsyncStorage.setItem(
+              MEAL_PLAN_STORAGE_KEY,
+              JSON.stringify(data)
+            );
           } else {
             router.push("/sign-in");
           }
@@ -65,30 +83,39 @@ const MealPlanScreen = () => {
         try {
           const storedData = await AsyncStorage.getItem(MEAL_PLAN_STORAGE_KEY);
           const userEmail = await AsyncStorage.getItem("email");
-          
-          const parsedData = JSON.parse(storedData ?? '{}');
+          setEmail(userEmail);
+
+          const parsedData = JSON.parse(storedData ?? "{}");
           if (storedData && Object.keys(parsedData).length != 0) {
-              console.log(parsedData)
-              console.log("Found updated data in AsyncStorage, refreshing view");
-              setMealPlanData(parsedData);
-            
+            console.log(parsedData);
+            console.log("Found updated data in AsyncStorage, refreshing view");
+            setMealPlanData(parsedData);
           } else {
             console.log("No data found in AsyncStorage on tab focus");
-            
+
             // If no data but we have email, try to fetch new data
             const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
-            const parsedSavedProfile = JSON.parse(savedProfile ?? '{}')
-            if (userEmail && savedProfile && Object.keys(parsedSavedProfile).length != 0) {
-
+            const parsedSavedProfile = JSON.parse(savedProfile ?? "{}");
+            if (
+              userEmail &&
+              savedProfile &&
+              Object.keys(parsedSavedProfile).length != 0
+            ) {
               try {
                 const data = await getMealPlanData(
-                  userEmail, 
+                  userEmail,
                   parsedSavedProfile
                 );
                 setMealPlanData(data);
-                await AsyncStorage.setItem(MEAL_PLAN_STORAGE_KEY, JSON.stringify(data));
+                await AsyncStorage.setItem(
+                  MEAL_PLAN_STORAGE_KEY,
+                  JSON.stringify(data)
+                );
               } catch (fetchError) {
-                console.error("Error fetching meal plan on tab focus:", fetchError);
+                console.error(
+                  "Error fetching meal plan on tab focus:",
+                  fetchError
+                );
               }
             }
           }
@@ -96,17 +123,48 @@ const MealPlanScreen = () => {
           console.error("Error checking AsyncStorage on tab focus:", error);
         }
       };
-      
+
       // Skip the check during initial load to avoid duplicate processing
       if (!loading) {
         checkStorageChanges();
       }
-      
+
       return () => {
         // Any cleanup if needed
       };
     }, [email, loading])
   );
+
+  // Submit user prompt to the API
+  const submitPrompt = async () => {
+    console.log(userPrompt);
+    console.log(email);
+    if (!userPrompt.trim() || !email) return;
+
+    console.log("old plan: ",mealPlanData);
+    setIsSubmitting(true);
+    try {
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_SERVER_URL}/DailyMealPlan/UpdateMealPlan/${email}`,
+        { prompt: userPrompt, previousMealPlan: mealPlanData }
+      );
+
+      // Refresh meal plan data after submission
+      if (response.status === 200) {
+        console.log(response.data)
+        setMealPlanData(response.data);
+        await AsyncStorage.setItem(MEAL_PLAN_STORAGE_KEY, JSON.stringify(response.data));
+      }
+
+      // Clear input and close modal
+      setUserPrompt("");
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Error submitting prompt:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Track completed meals
   const [completedMeals, setCompletedMeals] = useState<Record<string, boolean>>(
@@ -154,10 +212,16 @@ const MealPlanScreen = () => {
             if (email) {
               try {
                 const savedProfile = await AsyncStorage.getItem(USER_DATA_KEY);
-                const data = await getMealPlanData(email, savedProfile ? JSON.parse(savedProfile) : null);
+                const data = await getMealPlanData(
+                  email,
+                  savedProfile ? JSON.parse(savedProfile) : null
+                );
                 setMealPlanData(data);
                 // Make sure to update AsyncStorage when refreshing
-                await AsyncStorage.setItem(MEAL_PLAN_STORAGE_KEY, JSON.stringify(data));
+                await AsyncStorage.setItem(
+                  MEAL_PLAN_STORAGE_KEY,
+                  JSON.stringify(data)
+                );
               } catch (error) {
                 console.error("Error refreshing meal plan:", error);
               } finally {
@@ -253,6 +317,65 @@ const MealPlanScreen = () => {
           <Text className="text-gray-400">{mealPlanData.notes}</Text>
         </View>
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        className="absolute bottom-40 right-6 bg-cyan-500/80 w-[40px] h-[40px] rounded-full items-center justify-center shadow-lg"
+        onPress={() => setModalVisible(true)}
+      >
+        <MaterialCommunityIcons name="fruit-grapes" size={28} color="white" />
+      </TouchableOpacity>
+
+      {/* Modal for user prompt */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            setModalVisible(false);
+          }}
+        >
+          <View className="flex-1 justify-end bg-black/50">
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View className="bg-[#1a1933] rounded-t-xl p-4 w-full">
+                <View className="flex-row justify-between items-center mb-4">
+                  <Text className="text-white text-lg font-bold">
+                    Meal Plan Request
+                  </Text>
+                  <TouchableOpacity onPress={() => setModalVisible(false)}>
+                    <Feather name="x" size={24} color="#06b6d4" />
+                  </TouchableOpacity>
+                </View>
+
+                <TextInput
+                  className="bg-[#0f0D23] text-white p-4 rounded-lg mb-4 min-h-24"
+                  placeholder="Describe your meal plan request..."
+                  placeholderTextColor="#6b7280"
+                  multiline
+                  value={userPrompt}
+                  onChangeText={setUserPrompt}
+                />
+
+                <TouchableOpacity
+                  className="bg-cyan-500 p-3 rounded-lg items-center"
+                  onPress={submitPrompt}
+                  disabled={isSubmitting || !userPrompt.trim()}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="text-white font-semibold">Submit</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 };

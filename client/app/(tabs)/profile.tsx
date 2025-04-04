@@ -58,7 +58,7 @@ const DEFAULT_PROFILE: UserProfile = {
   daily_physical_activity: 'Sedentary',
   dietary_preferences: [],
   allergies: [],
-  profilePhoto: 'https://randomuser.me/api/portraits/lego/1.jpg',
+  profilePhoto: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
 };
 
 const STORAGE_KEY = 'userData';
@@ -156,7 +156,7 @@ const ProfileSection = () => {
         }
       );
       if(data){
-        const mealPlan = await getMealPlanData(data.email, profile);
+        const mealPlan = await getMealPlanData(data.email, profile, true);
         await AsyncStorage.setItem("meal_plan_data", JSON.stringify(mealPlan));
         console.log("✅ UPDATED:", data);
         setIsEditing(false);
@@ -239,7 +239,7 @@ const ProfileSection = () => {
         <View className="flex-row justify-between items-center py-4">
           <View className="relative">
             <Image 
-              source={{ uri: profile.profilePhoto }} 
+              source={{ uri: 'https://static.vecteezy.com/system/resources/previews/023/465/688/non_2x/contact-dark-mode-glyph-ui-icon-address-book-profile-page-user-interface-design-white-silhouette-symbol-on-black-space-solid-pictogram-for-web-mobile-isolated-illustration-vector.jpg' }} 
               className="w-20 h-20 rounded-full border-2"
               style={{borderColor: colors.accent}}
             />
@@ -392,7 +392,7 @@ const ProfileSection = () => {
                   style={{color: colors.text}}
                 >
                   {ACTIVITY_LEVELS.map(level => (
-                    <Picker.Item key={level} label={level} value={level} style={{color: colors.text}} />
+                    <Picker.Item key={level} label={level} value={level} style={{color: "black"}} />
                   ))}
                 </Picker>
               </View>
@@ -456,7 +456,7 @@ const ProfileSection = () => {
 
         {/* Allergies Section */}
         <View 
-          className={`rounded-xl mb-4 p-4 shadow-sm ${!isEditing && "mb-32"}`}
+          className="rounded-xl p-4 shadow-sm mb-32"
           style={{backgroundColor: colors.cardBackground, borderColor: colors.border}}
         >
           <View className="flex-row items-center mb-3">

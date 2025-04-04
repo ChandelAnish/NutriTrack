@@ -4,13 +4,14 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
   ActivityIndicator,
   Alert,
 } from "react-native";
 import axios from "axios";
 import { useRouter } from "expo-router";
+import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+// import { twMerge } from "tailwind-merge";
 
 const SignUpScreen: React.FC = () => {
   const router = useRouter();
@@ -31,6 +32,8 @@ const SignUpScreen: React.FC = () => {
     dietary_preferences: [] as string[],
     allergies: [] as string[],
   });
+
+  const [newAllergy, setNewAllergy] = useState("");
 
   const activityOptions = [
     "sedentary",
@@ -72,20 +75,21 @@ const SignUpScreen: React.FC = () => {
     return true;
   };
 
-  const validatePassword = (password: string) => {
-    const passwordRegex = /^(?=.[!@#$%^&(),.?":{}|<>]).{8,}$/;
-    if (!password) {
-      setErrors(prev => ({ ...prev, password: "Password is required" }));
-      return false;
-    } else if (!passwordRegex.test(password)) {
-      setErrors(prev => ({ 
-        ...prev, 
-        password: "Password must be at least 8 characters and include a special character" 
-      }));
-      return false;
-    }
-    setErrors(prev => ({ ...prev, password: "" }));
-    return true;
+  const validatePassword = (password: string) => { 
+    const passwordRegex = /^(?=.*[!@#$%^&*(),.?":{}|<>])(?=.*[A-Z])(?=.*\d).{8,}$/; 
+    
+    if (!password) { 
+      setErrors(prev => ({ ...prev, password: "Password is required" })); 
+      return false; 
+    } else if (!passwordRegex.test(password)) { 
+      setErrors(prev => ({  
+        ...prev,  
+        password: "Password must be at least 8 characters and include at least 1 special character, 1 uppercase letter, and 1 number"  
+      })); 
+      return false; 
+    } 
+    setErrors(prev => ({ ...prev, password: "" })); 
+    return true; 
   };
 
   // Toggle selection for multi-select options
@@ -102,6 +106,21 @@ const SignUpScreen: React.FC = () => {
     } else {
       updateFormData(field, [...currentItems, item]);
     }
+  };
+
+  // Add custom allergy
+  const addCustomAllergy = () => {
+    if (newAllergy.trim() && !formData.allergies.includes(newAllergy.trim())) {
+      updateFormData("allergies", [...formData.allergies, newAllergy.trim()]);
+      setNewAllergy("");
+    }
+  };
+
+  const removeAllergy = (allergy: string) => {
+    updateFormData(
+      "allergies",
+      formData.allergies.filter(item => item !== allergy)
+    );
   };
 
   const handleSignUp = async () => {
@@ -147,400 +166,364 @@ const SignUpScreen: React.FC = () => {
     }
   };
 
+  // Helper function to apply Tailwind classes
+  const tailwind = (className: string) => className;
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Tell us about yourself</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: "#0f0D23" }}>
+      <View style={{ padding: 20, paddingBottom: 40 }}>
+        <View style={{ width: "100%" }}>
+          <Text style={{ fontSize: 28, fontWeight: "bold", color: "white", marginBottom: 8 }}>Create Account</Text>
+          <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.7)", marginBottom: 24 }}>Tell us about yourself</Text>
 
-        {/* Account Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          {/* Account Information */}
+          <View style={{ marginBottom: 24 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "white", marginBottom: 16 }}>Account</Text>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={[styles.input, errors.email ? styles.inputError : null]}
-              placeholder="Enter your email"
-              placeholderTextColor="rgba(255,255,255,0.5)"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={formData.email}
-              onChangeText={(text) => updateFormData("email", text)}
-            />
-            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              style={[styles.input, errors.password ? styles.inputError : null]}
-              placeholder="Create a password"
-              placeholderTextColor="rgba(255,255,255,0.5)"
-              secureTextEntry
-              value={formData.password}
-              onChangeText={(text) => updateFormData("password", text)}
-            />
-            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
-          </View>
-        </View>
-
-        {/* Physical Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Physical Information</Text>
-
-          <View style={styles.rowContainer}>
-            <View style={[styles.inputContainer, styles.halfWidth]}>
-              <Text style={styles.inputLabel}>Age</Text>
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ color: "white", marginBottom: 8, fontSize: 14 }}>Email</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Years"
+                style={{ 
+                  backgroundColor: "rgba(255,255,255,0.1)", 
+                  borderRadius: 8, 
+                  borderWidth: 1, 
+                  borderColor: errors.email ? "#ff6b6b" : "rgba(6, 182, 212, 0.3)", 
+                  color: "white", 
+                  padding: 12, 
+                  fontSize: 16 
+                }}
+                placeholder="Enter your email"
                 placeholderTextColor="rgba(255,255,255,0.5)"
-                keyboardType="numeric"
-                value={formData.age}
-                onChangeText={(text) => updateFormData("age", text)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={formData.email}
+                onChangeText={(text) => updateFormData("email", text)}
               />
+              {errors.email ? <Text style={{ color: "#ff6b6b", fontSize: 12, marginTop: 5 }}>{errors.email}</Text> : null}
             </View>
 
-            <View style={[styles.inputContainer, styles.halfWidth]}>
-              <Text style={styles.inputLabel}>Height (cm)</Text>
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ color: "white", marginBottom: 8, fontSize: 14 }}>Password</Text>
               <TextInput
-                style={styles.input}
-                placeholder="cm"
+                style={{ 
+                  backgroundColor: "rgba(255,255,255,0.1)", 
+                  borderRadius: 8, 
+                  borderWidth: 1, 
+                  borderColor: errors.password ? "#ff6b6b" : "rgba(6, 182, 212, 0.3)", 
+                  color: "white", 
+                  padding: 12, 
+                  fontSize: 16 
+                }}
+                placeholder="Create a password"
                 placeholderTextColor="rgba(255,255,255,0.5)"
-                keyboardType="numeric"
-                value={formData.height}
-                onChangeText={(text) => updateFormData("height", text)}
+                secureTextEntry
+                value={formData.password}
+                onChangeText={(text) => updateFormData("password", text)}
               />
+              {errors.password ? <Text style={{ color: "#ff6b6b", fontSize: 12, marginTop: 5 }}>{errors.password}</Text> : null}
             </View>
           </View>
 
-          <View style={styles.rowContainer}>
-            <View style={[styles.inputContainer, styles.halfWidth]}>
-              <Text style={styles.inputLabel}>Current Weight (kg)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="kg"
-                placeholderTextColor="rgba(255,255,255,0.5)"
-                keyboardType="numeric"
-                value={formData.weight}
-                onChangeText={(text) => updateFormData("weight", text)}
-              />
+          {/* Physical Information */}
+          <View style={{ marginBottom: 24 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+              <FontAwesome5 name="user-alt" size={18} color="white" />
+              <Text style={{ fontSize: 18, fontWeight: "bold", color: "white", marginLeft: 8 }}>Physical Information</Text>
             </View>
 
-            <View style={[styles.inputContainer, styles.halfWidth]}>
-              <Text style={styles.inputLabel}>Target Weight (kg)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="kg"
-                placeholderTextColor="rgba(255,255,255,0.5)"
-                keyboardType="numeric"
-                value={formData.targetWeight}
-                onChangeText={(text) => updateFormData("targetWeight", text)}
-              />
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <View style={{ width: "48%", marginBottom: 16 }}>
+                <Text style={{ color: "white", marginBottom: 8, fontSize: 14 }}>Age</Text>
+                <TextInput
+                  style={{ 
+                    backgroundColor: "rgba(255,255,255,0.1)", 
+                    borderRadius: 8, 
+                    borderWidth: 1, 
+                    borderColor: "rgba(6, 182, 212, 0.3)", 
+                    color: "white", 
+                    padding: 12, 
+                    fontSize: 16 
+                  }}
+                  placeholder="Years"
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  keyboardType="numeric"
+                  value={formData.age}
+                  onChangeText={(text) => updateFormData("age", text)}
+                />
+              </View>
+
+              <View style={{ width: "48%", marginBottom: 16 }}>
+                <Text style={{ color: "white", marginBottom: 8, fontSize: 14 }}>Height (cm)</Text>
+                <TextInput
+                  style={{ 
+                    backgroundColor: "rgba(255,255,255,0.1)", 
+                    borderRadius: 8, 
+                    borderWidth: 1, 
+                    borderColor: "rgba(6, 182, 212, 0.3)", 
+                    color: "white", 
+                    padding: 12, 
+                    fontSize: 16 
+                  }}
+                  placeholder="cm"
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  keyboardType="numeric"
+                  value={formData.height}
+                  onChangeText={(text) => updateFormData("height", text)}
+                />
+              </View>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <View style={{ width: "48%", marginBottom: 16 }}>
+                <Text style={{ color: "white", marginBottom: 8, fontSize: 14 }}>Current Weight (kg)</Text>
+                <TextInput
+                  style={{ 
+                    backgroundColor: "rgba(255,255,255,0.1)", 
+                    borderRadius: 8, 
+                    borderWidth: 1, 
+                    borderColor: "rgba(6, 182, 212, 0.3)", 
+                    color: "white", 
+                    padding: 12, 
+                    fontSize: 16 
+                  }}
+                  placeholder="kg"
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  keyboardType="numeric"
+                  value={formData.weight}
+                  onChangeText={(text) => updateFormData("weight", text)}
+                />
+              </View>
+
+              <View style={{ width: "48%", marginBottom: 16 }}>
+                <Text style={{ color: "white", marginBottom: 8, fontSize: 14 }}>Target Weight (kg)</Text>
+                <TextInput
+                  style={{ 
+                    backgroundColor: "rgba(255,255,255,0.1)", 
+                    borderRadius: 8, 
+                    borderWidth: 1, 
+                    borderColor: "rgba(6, 182, 212, 0.3)", 
+                    color: "white", 
+                    padding: 12, 
+                    fontSize: 16 
+                  }}
+                  placeholder="kg"
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  keyboardType="numeric"
+                  value={formData.targetWeight}
+                  onChangeText={(text) => updateFormData("targetWeight", text)}
+                />
+              </View>
+            </View>
+
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ color: "white", marginBottom: 8, fontSize: 14 }}>Gender</Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <TouchableOpacity
+                  style={{ 
+                    backgroundColor: formData.gender === "male" ? "rgba(6, 182, 212, 0.2)" : "rgba(255,255,255,0.1)", 
+                    borderRadius: 8, 
+                    padding: 12, 
+                    flex: 1, 
+                    marginHorizontal: 4,
+                    borderWidth: 1,
+                    borderColor: formData.gender === "male" ? "rgb(6, 182, 212)" : "transparent"
+                  }}
+                  onPress={() => updateFormData("gender", "male")}
+                >
+                  <Text 
+                    style={{ 
+                      color: formData.gender === "male" ? "rgb(6, 182, 212)" : "white", 
+                      textAlign: "center",
+                      fontWeight: formData.gender === "male" ? "bold" : "normal"
+                    }}
+                  >
+                    Male
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ 
+                    backgroundColor: formData.gender === "female" ? "rgba(6, 182, 212, 0.2)" : "rgba(255,255,255,0.1)", 
+                    borderRadius: 8, 
+                    padding: 12, 
+                    flex: 1, 
+                    marginHorizontal: 4,
+                    borderWidth: 1,
+                    borderColor: formData.gender === "female" ? "rgb(6, 182, 212)" : "transparent"
+                  }}
+                  onPress={() => updateFormData("gender", "female")}
+                >
+                  <Text 
+                    style={{ 
+                      color: formData.gender === "female" ? "rgb(6, 182, 212)" : "white", 
+                      textAlign: "center",
+                      fontWeight: formData.gender === "female" ? "bold" : "normal"
+                    }}
+                  >
+                    Female
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Gender</Text>
-            <View style={styles.optionsRow}>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.gender === "male" && styles.selectedOption,
-                ]}
-                onPress={() => updateFormData("gender", "male")}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.gender === "male" && styles.selectedOptionText,
-                  ]}
+          {/* Activity Level */}
+          <View style={{ marginBottom: 24 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+              <MaterialIcons name="fitness-center" size={20} color="white" />
+              <Text style={{ fontSize: 18, fontWeight: "bold", color: "white", marginLeft: 8 }}>Activity Level</Text>
+            </View>
+            <View style={{ flexDirection: "column" }}>
+              {activityOptions.map((activity) => (
+                <TouchableOpacity
+                  key={activity}
+                  style={{ 
+                    backgroundColor: formData.daily_physical_activity === activity ? "rgba(6, 182, 212, 0.2)" : "rgba(255,255,255,0.1)", 
+                    borderRadius: 8, 
+                    padding: 12, 
+                    marginBottom: 8,
+                    borderWidth: 1,
+                    borderColor: formData.daily_physical_activity === activity ? "rgb(6, 182, 212)" : "transparent"
+                  }}
+                  onPress={() => updateFormData("daily_physical_activity", activity)}
                 >
-                  Male
-                </Text>
-              </TouchableOpacity>
+                  <Text 
+                    style={{ 
+                      color: formData.daily_physical_activity === activity ? "rgb(6, 182, 212)" : "white", 
+                      textAlign: "center",
+                      fontWeight: formData.daily_physical_activity === activity ? "bold" : "normal"
+                    }}
+                  >
+                    {activity.charAt(0).toUpperCase() + activity.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.gender === "female" && styles.selectedOption,
-                ]}
-                onPress={() => updateFormData("gender", "female")}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.gender === "female" && styles.selectedOptionText,
-                  ]}
+          {/* Dietary Preferences */}
+          <View style={{ marginBottom: 24 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+              <MaterialIcons name="restaurant" size={20} color="white" />
+              <Text style={{ fontSize: 18, fontWeight: "bold", color: "white", marginLeft: 8 }}>Dietary Preferences</Text>
+            </View>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", marginHorizontal: -4 }}>
+              {dietaryOptions.map((diet) => (
+                <TouchableOpacity
+                  key={diet}
+                  style={{ 
+                    backgroundColor: formData.dietary_preferences.includes(diet) ? "rgba(6, 182, 212, 0.2)" : "rgba(255,255,255,0.1)", 
+                    borderRadius: 16, 
+                    paddingVertical: 8, 
+                    paddingHorizontal: 12, 
+                    margin: 4,
+                    borderWidth: 1,
+                    borderColor: formData.dietary_preferences.includes(diet) ? "rgb(6, 182, 212)" : "transparent"
+                  }}
+                  onPress={() => toggleSelection("dietary_preferences", diet)}
                 >
-                  Female
-                </Text>
+                  <Text 
+                    style={{ 
+                      color: formData.dietary_preferences.includes(diet) ? "rgb(6, 182, 212)" : "white",
+                      fontWeight: formData.dietary_preferences.includes(diet) ? "bold" : "normal"
+                    }}
+                  >
+                    {diet}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Allergies - Updated to match the image */}
+          <View style={{ marginBottom: 24 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+            <Ionicons name="warning-outline" size={20} color="#3B82F6" />
+              <Text style={{ fontSize: 18, fontWeight: "bold", color: "white", marginLeft: 8 }}>Allergies</Text>
+            </View>
+            
+            {/* Selected allergies display */}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", marginHorizontal: -4, marginBottom: 16 }}>
+              {formData.allergies.map((allergy) => (
+                <View
+                  key={allergy}
+                  style={{ 
+                    backgroundColor: "rgba(153, 27, 27, 0.8)",  // Dark red with opacity
+                    borderRadius: 20, 
+                    paddingVertical: 8, 
+                    paddingHorizontal: 16, 
+                    margin: 4,
+                    flexDirection: "row",
+                    alignItems: "center" 
+                  }}
+                >
+                  <Text style={{ color: "white", marginRight: 8 }}>{allergy}</Text>
+                  <TouchableOpacity onPress={() => removeAllergy(allergy)}>
+                    <Ionicons name="close" size={16} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+            
+            {/* Add new allergy input */}
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ flex: 1, backgroundColor: "rgba(51, 65, 85, 0.5)", borderRadius: 8 }}>
+                <TextInput
+                  style={{ color: "white", padding: 12 }}
+                  placeholder="Add new allergy"
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  value={newAllergy}
+                  onChangeText={setNewAllergy}
+                  onSubmitEditing={addCustomAllergy}
+                />
+              </View>
+              <TouchableOpacity 
+                style={{ 
+                  backgroundColor: "rgb(6, 182, 212)", 
+                  borderRadius: 999, 
+                  marginLeft: 16,
+                  width: 56,
+                  height: 56,
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+                onPress={addCustomAllergy}
+              >
+                <Ionicons name="add" size={24} color="white" />
               </TouchableOpacity>
             </View>
           </View>
-        </View>
 
-        {/* Activity Level */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Activity Level</Text>
-          <View style={styles.optionsContainer}>
-            {activityOptions.map((activity) => (
-              <TouchableOpacity
-                key={activity}
-                style={[
-                  styles.optionButton,
-                  formData.daily_physical_activity === activity &&
-                    styles.selectedOption,
-                ]}
-                onPress={() =>
-                  updateFormData("daily_physical_activity", activity)
-                }
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.daily_physical_activity === activity &&
-                      styles.selectedOptionText,
-                  ]}
-                >
-                  {activity.charAt(0).toUpperCase() + activity.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Dietary Preferences */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dietary Preferences</Text>
-          <View style={styles.tagsContainer}>
-            {dietaryOptions.map((diet) => (
-              <TouchableOpacity
-                key={diet}
-                style={[
-                  styles.tagButton,
-                  formData.dietary_preferences.includes(diet) &&
-                    styles.selectedTag,
-                ]}
-                onPress={() => toggleSelection("dietary_preferences", diet)}
-              >
-                <Text
-                  style={[
-                    styles.tagText,
-                    formData.dietary_preferences.includes(diet) &&
-                      styles.selectedTagText,
-                  ]}
-                >
-                  {diet}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Allergies */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Allergies</Text>
-          <View style={styles.tagsContainer}>
-            {allergyOptions.map((allergy) => (
-              <TouchableOpacity
-                key={allergy}
-                style={[
-                  styles.tagButton,
-                  formData.allergies.includes(allergy) && styles.selectedTag,
-                ]}
-                onPress={() => toggleSelection("allergies", allergy)}
-              >
-                <Text
-                  style={[
-                    styles.tagText,
-                    formData.allergies.includes(allergy) &&
-                      styles.selectedTagText,
-                  ]}
-                >
-                  {allergy}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Submit Button */}
-        <TouchableOpacity
-          style={styles.signUpButton}
-          onPress={handleSignUp}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.signUpButtonText}>Create Account</Text>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>Already have an account?</Text>
-          <TouchableOpacity onPress={() => router.push('/sign-in')}>
-            <Text style={styles.signInLink}>Sign In</Text>
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={{ 
+              backgroundColor: "rgb(6, 182, 212)", 
+              borderRadius: 8, 
+              padding: 16, 
+              alignItems: "center", 
+              marginTop: 16, 
+              marginBottom: 40
+            }}
+            onPress={handleSignUp}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Create Account</Text>
+            )}
           </TouchableOpacity>
+
+          <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 24,marginBottom:100,paddingBottom:150 }}>
+            <Text style={{ color: "rgba(255,255,255,0.7)" }}>Already have an account?</Text>
+            <TouchableOpacity onPress={() => router.push('/sign-in')}>
+              <Text style={{ color: "rgb(6, 182, 212)", fontWeight: "bold", marginLeft: 4 }}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ScrollView>
   );
 };
 
-
- 
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0f0D23",
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  formContainer: {
-    width: "100%",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "rgba(255,255,255,0.7)",
-    marginBottom: 24,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 16,
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  rowContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  halfWidth: {
-    width: "48%",
-  },
-  inputLabel: {
-    color: "white",
-    marginBottom: 8,
-    fontSize: 14,
-  },
-   inputError: {
-    borderColor: '#ff6b6b',
-    borderWidth: 1,
-  },
-  errorText: {
-    color: '#ff6b6b',
-    fontSize: 12,
-    marginTop: 5,
-  },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(6, 182, 212, 0.3)", // cyan-500 with opacity
-    color: "white",
-    padding: 12,
-    fontSize: 16,
-  },
-  optionsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  optionsContainer: {
-    flexDirection: "column",
-  },
-  optionButton: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "transparent",
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  selectedOption: {
-    backgroundColor: "rgba(6, 182, 212, 0.2)",
-    borderColor: "rgb(6, 182, 212)",
-  },
-  optionText: {
-    color: "white",
-    textAlign: "center",
-  },
-  selectedOptionText: {
-    fontWeight: "bold",
-    color: "rgb(6, 182, 212)",
-  },
-  tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -4,
-  },
-  tagButton: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    margin: 4,
-    borderWidth: 1,
-    borderColor: "transparent",
-  },
-  selectedTag: {
-    backgroundColor: "rgba(6, 182, 212, 0.2)",
-    borderColor: "rgb(6, 182, 212)",
-  },
-  tagText: {
-    color: "white",
-  },
-  selectedTagText: {
-    fontWeight: "bold",
-    color: "rgb(6, 182, 212)",
-  },
-  signUpButton: {
-    backgroundColor: "rgb(6, 182, 212)", // cyan-500
-    borderRadius: 8,
-    padding: 16,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  signUpButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  footerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 24,
-  },
-  footerText: {
-    color: "rgba(255,255,255,0.7)",
-  },
-  signInLink: {
-    color: "rgb(6, 182, 212)", // cyan-500
-    fontWeight: "bold",
-    marginLeft: 4,
-  },
-});
-
 export default SignUpScreen;
-

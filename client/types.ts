@@ -1,6 +1,6 @@
 export interface FoodItem {
     name: string;
-    portion_size: string;
+    portion: string;
     emoji: string;
   }
   
