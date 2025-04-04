@@ -36,8 +36,8 @@ export default function HomePage() {
             <Text style={styles.heroSubtitle}>
               Start your path to a healthier lifestyle with personalized nutrition guidance.
             </Text>
-            <TouchableOpacity style={styles.getStartedButton}>
-              <Text style={styles.getStartedText} onPress={()=>router.push("/mealPlan")}>Get Started</Text>
+            <TouchableOpacity style={styles.getStartedButton} onPress={()=>router.push("/mealPlan")}>
+              <Text style={styles.getStartedText}>Get Started</Text>
               <MaterialCommunityIcons name="arrow-right" size={20} color="#ffffff" />
             </TouchableOpacity>
           </View>

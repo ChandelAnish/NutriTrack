@@ -344,7 +344,7 @@ const MealPlanScreen = () => {
               <View className="bg-[#1a1933] rounded-t-xl p-4 w-full">
                 <View className="flex-row justify-between items-center mb-4">
                   <Text className="text-white text-lg font-bold">
-                    Meal Plan Request
+                    Ask JayDEV
                   </Text>
                   <TouchableOpacity onPress={() => setModalVisible(false)}>
                     <Feather name="x" size={24} color="#06b6d4" />
