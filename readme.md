@@ -68,21 +68,6 @@ Access your nutrition data across all your devices with real-time synchronizatio
   <img src="https://drive.google.com/uc?id=1UuhGsRhdUXmba2bUuuHveJthNI9Shkwd" alt="NutriTrack profile" width="30%" />
 </div>
 
-## 📊 Visualizations
-
-NutriTrack provides beautiful data visualizations to help you understand your nutrition habits:
-
-<div align="center">
-  <img src="public/nutritrack-charts.png" alt="NutriTrack Charts" width="80%" />
-</div>
-
-## 📱 Mobile Experience
-
-Take NutriTrack anywhere with our fully responsive mobile app:
-
-<div align="center">
-  <img src="public/nutritrack-mobile.png" alt="NutriTrack Mobile" width="50%" />
-</div>
 
 ## 📦 Installation
 
