@@ -33,8 +33,11 @@
     <strong>Intelligent Nutrition Monitoring & Analysis</strong><br>
     Track meals, analyze nutrients, and achieve your health goals with ease
   </p>
-  
-  ![NutriTrack Banner](https://drive.google.com/uc?id=1RIj73tziibo6KIDPmreeSOhF81vvYynY)
+
+  <div align="center">
+  <img src="https://drive.google.com/uc?id=1RIj73tziibo6KIDPmreeSOhF81vvYynY" alt="NutriTrack Home" width="30%" />
+</div>
+
 </div>
 
 ## 🚀 Features
@@ -60,7 +63,9 @@ Access your nutrition data across all your devices with real-time synchronizatio
 ## ✨ Preview
 
 <div align="center">
-  <img src="https://drive.google.com/uc?id=1S4Mb3UbNdmwzPYmDgTWjRmTGOVI8bh4C" alt="NutriTrack Dashboard" width="80%" />
+  <img src="https://drive.google.com/uc?id=1RIj73tziibo6KIDPmreeSOhF81vvYynY" alt="NutriTrack Home" width="30%" />
+  <img src="https://drive.google.com/uc?id=1S4Mb3UbNdmwzPYmDgTWjRmTGOVI8bh4C" alt="NutriTrack Meal Plan" width="30%" />
+  <img src="https://drive.google.com/uc?id=1UuhGsRhdUXmba2bUuuHveJthNI9Shkwd" alt="NutriTrack profile" width="30%" />
 </div>
 
 ## 📊 Visualizations
