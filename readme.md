@@ -57,12 +57,10 @@ Get personalized meal suggestions based on your preferences, dietary restriction
 ### ✅ Seamless Device Synchronization
 Access your nutrition data across all your devices with real-time synchronization.
 
-## ✨ Demo
-
-See NutriTrack in action on our [live demo](https://nutritrack-demo.vercel.app)!
+## ✨ Preview
 
 <div align="center">
-  <img src="public/nutritrack-dashboard.png" alt="NutriTrack Dashboard" width="80%" />
+  <img src="https://drive.google.com/uc?id=1S4Mb3UbNdmwzPYmDgTWjRmTGOVI8bh4C" alt="NutriTrack Dashboard" width="80%" />
 </div>
 
 ## 📊 Visualizations
